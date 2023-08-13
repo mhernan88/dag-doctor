@@ -1,0 +1,30 @@
+{
+  "pipeline": [
+    {
+      "inputs": [
+        "companies"
+      ],
+      "outputs": [
+        "preprocessed_companies"
+      ]
+    },
+    {
+      "inputs": [
+        "shuttles"
+      ],
+      "outputs": [
+        "preprocessed_shuttles"
+      ]
+    },
+    {
+      "inputs": [
+        "preprocessed_shuttles",
+        "preprocessed_companies",
+        "reviews"
+      ],
+      "outputs": [
+        "model_input_table"
+      ]
+    }
+  ]
+}
