@@ -67,3 +67,53 @@ func (p *Pipeline) FindMidpoint() []PipelineNode {
 
 	return middleNodes
 }
+
+// traverseBefore recursively marks the ancestor nodes of the given node
+// to be pruned unless they are also dependencies for other nodes.
+func (p *Pipeline) traverseBefore(node *PipelineNode, toBePruned map[string]bool) {
+	if node == nil || toBePruned[node.Name] {
+		return
+	}
+	toBePruned[node.Name] = true
+	for _, prevNode := range node.Prev {
+		// If this previous node is also a dependency for other nodes, skip it
+		if len(prevNode.Next) > 1 {
+			continue
+		}
+		p.traverseBefore(prevNode, toBePruned)
+	}
+}
+
+// traverseAfter recursively marks all the descendant nodes of the given node to be pruned.
+func (p *Pipeline) traverseAfter(node *PipelineNode, toBePruned map[string]bool) {
+	if node == nil || toBePruned[node.Name] {
+		return
+	}
+	toBePruned[node.Name] = true
+	for _, nextNode := range node.Next {
+		p.traverseAfter(nextNode, toBePruned)
+	}
+}
+
+// PruneNodes prunes nodes in the pipeline based on the given flag and target node.
+// If the boolean flag is true, all nodes before the provided node are pruned,
+// unless the ancestor node is a dependency for another branch.
+// If the boolean flag is false, all of the descendant nodes are pruned from the DAG.
+func (p *Pipeline) PruneNodes(pruneBefore bool, targetNode *PipelineNode) {
+	toBePruned := map[string]bool{}
+
+	if pruneBefore {
+		p.traverseBefore(targetNode, toBePruned)
+	} else {
+		p.traverseAfter(targetNode, toBePruned)
+	}
+
+	newNodes := []PipelineNode{}
+	for _, node := range p.Nodes {
+		if !toBePruned[node.Name] {
+			newNodes = append(newNodes, node)
+		}
+	}
+	p.Nodes = newNodes
+}
+

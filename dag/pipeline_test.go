@@ -50,3 +50,41 @@ func TestFindMidpoint(t *testing.T) {
     }
 }
 
+func TestPruneNodesBefore(t *testing.T) {
+	// Creating a DAG structure
+	// Node1 -> Node2 -> Node3
+	// Node1 -> Node4
+	node4 := &PipelineNode{Name: "Node4"}
+	node3 := &PipelineNode{Name: "Node3"}
+	node2 := &PipelineNode{Name: "Node2", Outputs: []string{"Node3"}, Next: []*PipelineNode{node3}}
+	node1 := &PipelineNode{Name: "Node1", Outputs: []string{"Node2", "Node4"}, Next: []*PipelineNode{node2, node4}}
+	node2.Prev = []*PipelineNode{node1}
+	node3.Prev = []*PipelineNode{node2}
+	node4.Prev = []*PipelineNode{node1}
+
+	p := Pipeline{Nodes: []PipelineNode{*node1, *node2, *node3, *node4}}
+	p.PruneNodes(true, node3)
+
+	if len(p.Nodes) != 2 || p.Find("Node1") == nil || p.Find("Node4") == nil {
+		t.Errorf("Pruning before failed. Expected nodes: Node1, Node4, but got: %+v", p.Nodes)
+	}
+}
+
+func TestPruneNodesAfter(t *testing.T) {
+	// Creating a DAG structure similar to before
+	node4 := &PipelineNode{Name: "Node4"}
+	node3 := &PipelineNode{Name: "Node3"}
+	node2 := &PipelineNode{Name: "Node2", Outputs: []string{"Node3"}, Next: []*PipelineNode{node3}}
+	node1 := &PipelineNode{Name: "Node1", Outputs: []string{"Node2", "Node4"}, Next: []*PipelineNode{node2, node4}}
+	node2.Prev = []*PipelineNode{node1}
+	node3.Prev = []*PipelineNode{node2}
+	node4.Prev = []*PipelineNode{node1}
+
+	p := Pipeline{Nodes: []PipelineNode{*node1, *node2, *node4}}
+	p.PruneNodes(false, node1)
+
+	if len(p.Nodes) != 0 {
+		t.Errorf("Pruning after failed. Expected no nodes, but got: %+v", p.Nodes)
+	}
+}
+

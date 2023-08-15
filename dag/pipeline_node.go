@@ -35,3 +35,4 @@ func (node *PipelineNode) Distance() (int, int) {
 	endDist := node.DistanceToEnd()
 	return beginningDist, endDist
 }
+
