@@ -31,7 +31,7 @@ func (node *PipelineNode) DistanceToEnd() int {
 }
 
 func (node *PipelineNode) Distance() (int, int) {
-	beginningDist := node.DistanceToStart() - 1 // Subtracting 1 to exclude the node itself
-	endDist := node.DistanceToEnd() - 1         // Subtracting 1 to exclude the node itself
+	beginningDist := node.DistanceToStart() 
+	endDist := node.DistanceToEnd()
 	return beginningDist, endDist
 }
