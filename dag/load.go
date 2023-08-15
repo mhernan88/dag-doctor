@@ -1,5 +1,12 @@
 package dag
 
+import (
+    "os"
+    "fmt"
+    "io"
+    "encoding/json"
+)
+
 func Load(filename string) (*Pipeline, error) {
 	file, err := os.Open(filename)
 	if err != nil {

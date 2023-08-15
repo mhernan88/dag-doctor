@@ -11,7 +11,7 @@ type PipelineNode struct {
 func (node *PipelineNode) DistanceToStart() int {
 	maxDist := -1
 	for _, prevNode := range node.Prev {
-		dist := prevNode.distanceToStart()
+		dist := prevNode.DistanceToStart()
 		if dist > maxDist {
 			maxDist = dist
 		}
@@ -22,7 +22,7 @@ func (node *PipelineNode) DistanceToStart() int {
 func (node *PipelineNode) DistanceToEnd() int {
 	maxDist := -1
 	for _, nextNode := range node.Next {
-		dist := nextNode.distanceToEnd()
+		dist := nextNode.DistanceToEnd()
 		if dist > maxDist {
 			maxDist = dist
 		}
@@ -31,7 +31,7 @@ func (node *PipelineNode) DistanceToEnd() int {
 }
 
 func (node *PipelineNode) Distance() (int, int) {
-	beginningDist := node.distanceToStart() - 1 // Subtracting 1 to exclude the node itself
-	endDist := node.distanceToEnd() - 1         // Subtracting 1 to exclude the node itself
+	beginningDist := node.DistanceToStart() - 1 // Subtracting 1 to exclude the node itself
+	endDist := node.DistanceToEnd() - 1         // Subtracting 1 to exclude the node itself
 	return beginningDist, endDist
 }

@@ -1,5 +1,9 @@
 package dag
 
+import (
+    "fmt"
+)
+
 type Pipeline struct {
   Nodes []PipelineNode `json:"nodes"`
 } 
@@ -42,7 +46,7 @@ func (p *Pipeline) calculateDistances() (map[string]int, map[string]int) {
 	distanceToEnd := make(map[string]int)
 
 	for _, node := range p.Nodes {
-		start, end := node.distance()
+		start, end := node.Distance()
 		distanceToStart[node.Name] = start
 		distanceToEnd[node.Name] = end
 	}
