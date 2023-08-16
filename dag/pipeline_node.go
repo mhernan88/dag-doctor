@@ -6,6 +6,7 @@ type PipelineNode struct {
 	Outputs          []string        `json:"outputs"`
 	Next             []*PipelineNode `json:"-"`
 	Prev             []*PipelineNode `json:"-"`
+    IsValid *bool `json:"-"`
 }
 
 func (node *PipelineNode) DistanceToStart() int {
