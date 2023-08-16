@@ -5,10 +5,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
+    "slices"
 
 	"github.com/urfave/cli/v2"
     "github.com/mhernan88/dag-bisect/dag"
 )
+
+var yesVariants = []string{"y", "yes"}
+var noVariants = []string{"n", "no"}
 
 func main() {
 	app := &cli.App{
@@ -68,15 +72,16 @@ func inspectPipeline(pipeline *dag.Pipeline) []string {
 			fmt.Println("Does the file look correct? (yes/no):")
 			input, _ := reader.ReadString('\n')
 			input = strings.TrimSpace(input)
+            input = strings.ToLower(input)
 
 			isValid := false
-			if input == "yes" {
+            if slices.Contains(yesVariants, input) {
 				isValid = true
 				pipeline.PruneNodes(false, &node)
-			} else if input == "no" {
+            } else if slices.Contains(noVariants, input) {
 				pipeline.PruneNodes(true, &node)
 			} else {
-				fmt.Println("Invalid input, please enter 'yes' or 'no'.")
+                fmt.Println("Invalid input, please enter one of: 'yes', 'y', 'no', 'n'.")
 				continue
 			}
 
