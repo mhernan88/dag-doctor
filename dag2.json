@@ -1,71 +1,77 @@
 {
-  "pipeline": [
-    {
-      "inputs": [
-        "companies",
-        "employees"
-      ],
-      "outputs": [
-        "preprocessed_companies",
-        "preprocessed_employees"
-      ]
-    },
-    {
-      "inputs": [
-        "shuttles",
-        "routes"
-      ],
-      "outputs": [
-        "preprocessed_shuttles",
-        "preprocessed_routes"
-      ]
-    },
-    {
-      "inputs": [
-        "reviews",
-        "ratings"
-      ],
-      "outputs": [
-        "preprocessed_reviews",
-        "preprocessed_ratings"
-      ]
-    },
-    {
-      "inputs": [
-        "preprocessed_companies",
-        "preprocessed_employees",
-        "preprocessed_shuttles",
-        "preprocessed_routes",
-        "preprocessed_reviews",
-        "preprocessed_ratings"
-      ],
-      "outputs": [
-        "model_input_table",
-        "aggregated_data"
-      ]
-    },
-    {
-      "inputs": [
-        "model_input_table",
-        "external_data_source"
-      ],
-      "outputs": [
-        "final_model",
-        "supplementary_data"
-      ]
-    },
-    {
-      "inputs": [
-        "final_model",
-        "aggregated_data",
-        "supplementary_data"
-      ],
-      "outputs": [
-        "reporting_table",
-        "visualization_data",
-        "business_insights"
-      ]
-    }
-  ]
+    "nodes": [
+        {
+            "name": "preprocess_companies_and_employees",
+            "inputs": [
+                "companies",
+                "employees"
+            ],
+            "outputs": [
+                "preprocessed_companies",
+                "preprocessed_employees"
+            ]
+        },
+        {
+            "name": "preprocess_shuttles_and_routes",
+            "inputs": [
+                "shuttles",
+                "routes"
+            ],
+            "outputs": [
+                "preprocessed_shuttles",
+                "preprocessed_routes"
+            ]
+        },
+        {
+            "name": "preprocess_reviews_and_ratings",
+            "inputs": [
+                "reviews",
+                "ratings"
+            ],
+            "outputs": [
+                "preprocessed_reviews",
+                "preprocessed_ratings"
+            ]
+        },
+        {
+            "name": "create_wide_table",
+            "inputs": [
+                "preprocessed_companies",
+                "preprocessed_employees",
+                "preprocessed_shuttles",
+                "preprocessed_routes",
+                "preprocessed_reviews",
+                "preprocessed_ratings"
+            ],
+            "outputs": [
+                "model_input_table",
+                "aggregated_data"
+            ]
+        },
+        {
+            "name": "postprocess_table",
+            "inputs": [
+                "model_input_table",
+                "external_data_source"
+            ],
+            "outputs": [
+                "final_model",
+                "supplementary_data"
+            ]
+        },
+        {
+            "name": "create_final_model",
+            "inputs": [
+                "final_model",
+                "aggregated_data",
+                "supplementary_data"
+            ],
+            "outputs": [
+                "reporting_table",
+                "visualization_data",
+                "business_insights"
+            ]
+        }
+    ]
 }
 
