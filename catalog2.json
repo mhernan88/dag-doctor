@@ -1,0 +1,16 @@
+{
+    "catalog": {
+        "companies": {
+            "filename": "companies.csv"
+        },
+        "employees": {
+            "filename": "employees.csv"
+        },
+        "preprocessed_companies": {
+            "filename": "preprocessed_companies.csv"
+        },
+        "preprocessed_employees": {
+            "filename": "preprocessed_employees.csv"
+        }
+    }
+}
