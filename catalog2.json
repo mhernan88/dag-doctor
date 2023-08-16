@@ -11,6 +11,51 @@
         },
         "preprocessed_employees": {
             "filename": "preprocessed_employees.csv"
+        },
+        "shuttles": {
+            "filename": "shuttles.csv"
+        },
+        "routes": {
+            "filename": "routes.csv"
+        },
+        "preprocessed_shuttles": {
+            "filename": "preprocessed_shuttles.csv"
+        },
+        "preprocessed_routes": {
+            "filename": "preprocessed_routes.csv"
+        },
+        "reviews": {
+            "filename": "reviews.csv"
+        },
+        "ratings": {
+            "filename": "ratings.csv",
+        },
+        "preprocessed_reviews": {
+            "filename": "preprocessed_reviews.csv"
+        },
+        "preprocessed_ratings": {
+            "filename": "preprocessed_ratings.csv"
+        },
+        "model_input_table": {
+            "filename": "model_input_table.csv"
+        },
+        "aggregated_data": {
+            "filename": "aggregated_data.csv"
+        },
+        "final_model": {
+            "filename": "final_model.csv"
+        },
+        "supplementary_data": {
+            "filename": "supplementary_data.csv"
+        },
+        "reporting_table": {
+            "filename": "reporting_table.csv"
+        },
+        "visualization_data": {
+            "filename": "visualization_data.csv"
+        },
+        "business_insights": {
+            "filename": "business_insights.csv"
         }
     }
 }
