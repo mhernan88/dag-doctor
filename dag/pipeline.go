@@ -1,9 +1,5 @@
 package dag
 
-import (
-    "fmt"
-)
-
 type Pipeline struct {
   Nodes []PipelineNode `json:"nodes"`
 } 
@@ -23,7 +19,7 @@ func (p Pipeline) Link() error {
 		for _, output := range p.Nodes[i].Outputs {
 			nextNode, exists := nodeMap[output]
 			if !exists {
-				return fmt.Errorf("output node not found: %s", output)
+				continue
 			}
 			p.Nodes[i].Next = append(p.Nodes[i].Next, nextNode)
 			nextNode.Prev = append(nextNode.Prev, &p.Nodes[i])
