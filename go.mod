@@ -5,6 +5,7 @@ go 1.21.0
 require (
 	github.com/fatih/color v1.15.0
 	github.com/rodaine/table v1.1.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.25.7
 )
 
