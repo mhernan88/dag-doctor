@@ -3,6 +3,7 @@ module github.com/mhernan88/dag-bisect
 go 1.21.0
 
 require (
+	github.com/enescakir/emoji v1.0.0
 	github.com/fatih/color v1.15.0
 	github.com/rodaine/table v1.1.0
 	github.com/sirupsen/logrus v1.9.3

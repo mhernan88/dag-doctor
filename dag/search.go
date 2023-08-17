@@ -6,6 +6,7 @@ import (
     "fmt"
     "slices"
     "github.com/sirupsen/logrus"
+    "github.com/enescakir/emoji"
 )
 
 func NewInspector(
@@ -30,7 +31,7 @@ type Inspector struct {
 }
 
 func (i *Inspector) IsDatasetOK(dataset string) (bool, error) {
-    fmt.Printf("\t- inspecting dataset: %s\n", dataset)
+    fmt.Printf("----> inspecting dataset: %s\n\n", dataset)
     pipelineFile, ok := i.catalog[dataset]
     if !ok {
         return false, fmt.Errorf("dataset '%s' not found in catalog", dataset)
@@ -41,17 +42,17 @@ func (i *Inspector) IsDatasetOK(dataset string) (bool, error) {
     }
 
     for {
-        fmt.Println("\t- output correct? (y/n):")
+        fmt.Println("\n----> output correct? (y/n):")
         input, _, err := i.r.ReadRune()
         if err != nil {
             return false, err
         }
 
         if slices.Contains([]rune{'y', 'Y'}, input) {
-            fmt.Printf("\t- dataset %s maked OK\n", dataset)
+            fmt.Printf("----> %v dataset '%s' maked OK\n", emoji.CheckMarkButton, dataset)
             return true, nil
         } else if slices.Contains([]rune{'n', 'N'}, input) {
-            fmt.Printf("\t- dataset %s maked ERR\n", dataset)
+            fmt.Printf("----> dataset '%s' maked ERR\n", dataset)
             return false, nil
         }
     }
