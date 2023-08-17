@@ -28,7 +28,7 @@
             "filename": "reviews.csv"
         },
         "ratings": {
-            "filename": "ratings.csv",
+            "filename": "ratings.csv"
         },
         "preprocessed_reviews": {
             "filename": "preprocessed_reviews.csv"
