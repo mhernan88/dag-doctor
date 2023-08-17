@@ -8,8 +8,11 @@ import (
     "github.com/rodaine/table"
 )
 
+type PipelineFileContainer struct {
+    Catalog map[string]PipelineFile `json:"catalog"`
+}
+
 type PipelineFile struct {
-    Name string `json:"name"`
     Filename string `json:"filename"`
 }
 
