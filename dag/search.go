@@ -52,8 +52,10 @@ func (i *Inspector) IsDatasetOK(dataset string) (bool, error) {
             fmt.Printf("----> %v dataset '%s' maked OK\n", emoji.CheckMarkButton, dataset)
             return true, nil
         } else if slices.Contains([]rune{'n', 'N'}, input) {
-            fmt.Printf("----> dataset '%s' maked ERR\n", dataset)
+            fmt.Printf("----> %v dataset '%s' maked ERR\n", emoji.CrossMarkButton, dataset)
             return false, nil
+        } else {
+            fmt.Printf("----> invalid input; options are: y, Y, n, N")
         }
     }
 }
