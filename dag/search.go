@@ -68,6 +68,7 @@ func (i *Inspector) IsNodeOK(node PipelineNode) (bool, error) {
             return false, nil
         }
     }
+    fmt.Printf("node %s cleared OK\n", node.Name)
     return true, nil
 }
 
