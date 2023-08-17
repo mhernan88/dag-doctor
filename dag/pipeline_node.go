@@ -37,3 +37,11 @@ func (node *PipelineNode) Distance() (int, int) {
 	return beginningDist, endDist
 }
 
+func (node *PipelineNode) InputsValid() bool {
+    for _, prevNode := range node.Prev {
+        if prevNode.IsValid == nil || *prevNode.IsValid == false {
+            return false
+        }
+    }
+    return true
+}
