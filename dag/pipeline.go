@@ -113,3 +113,13 @@ func (p *Pipeline) PruneNodes(pruneBefore bool, targetNode *PipelineNode) {
 	p.Nodes = newNodes
 }
 
+
+func (p *Pipeline) AllNodesInspected() bool {
+    for _, node := range p.Nodes {
+        if node.IsValid == nil {
+            return false
+        }
+    }
+    return true
+}
+
