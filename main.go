@@ -37,43 +37,54 @@ func main() {
 		Usage: "Inspect a data pipeline for errors",
         Flags: flags,
 		Action: func(c *cli.Context) error {
-            log := logrus.New()
+            l := logrus.New()
             if c.Bool("verbose") {
-                log.SetLevel(logrus.TraceLevel)
+                l.SetLevel(logrus.TraceLevel)
             }
 
-            log.Tracef("loading pipeline file %s", c.String("pipeline"))
-            pipeline, err := dag.LoadPipeline(c.String("pipeline"))
+            l.Tracef("loading pipeline file %s", c.String("pipeline"))
+            pipelinePtr, err := dag.LoadPipeline(c.String("pipeline"), l)
             if err != nil {
                 return err
             }
 
-            if pipeline == nil {
-                return fmt.Errorf("pipeline was nil")
+            if pipelinePtr == nil {
+                return fmt.Errorf("ERR: pipeline was nil")
             }
-            log.Tracef("successfully loaded pipeline file %s", c.String("pipeline"))
+            pipeline := *pipelinePtr
 
-            log.Tracef("linking pipeline nodes")
+            if pipeline.GetNodes() == nil {
+                return fmt.Errorf("ERR: pipeline has no nodes")
+            }
+
+            l.Tracef(
+                "successfully loaded pipeline file %s with %d nodes",
+                c.String("pipeline"),
+                len(pipeline.GetNodes()),
+            )
+
+
+            l.Tracef("linking pipeline nodes")
             err = pipeline.Link()
             if err != nil {
                 return err
             }
-            log.Tracef("successfully linked pipeline nodes")
+            l.Tracef("successfully linked pipeline nodes")
 
-            log.Tracef("loading catalog file %s", c.String("catalog"))
+            l.Tracef("loading catalog file %s", c.String("catalog"))
             catalog, err := dag.LoadCatalog(c.String("catalog"))
             if err != nil {
                 return err
             }
-            log.Tracef("successfully loaded catalog file %s", c.String("catalog"))
+            l.Tracef("successfully loaded catalog file %s", c.String("catalog"))
             
-            inspector := dag.NewInspector(*catalog, *pipeline, log)
+            inspector := dag.NewInspector(*catalog, pipeline, l)
 
 			// Iterate through the inspection process
-            log.Tracef("performing binary error search on pipeline")
+            l.Tracef("performing binary error search on pipeline")
             _, err = inspector.IsPipelineOK()
             if err != nil {
-                log.Errorf(err.Error())
+                l.Errorf(err.Error())
             }
 			return nil
 		},

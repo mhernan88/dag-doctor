@@ -5,9 +5,11 @@ import (
     "fmt"
     "io"
     "encoding/json"
+    "github.com/sirupsen/logrus"
 )
 
-func LoadPipeline(filename string) (*Pipeline, error) {
+// Use github.com/heimdalr/dag here
+func LoadPipeline(filename string, l *logrus.Logger) (*Pipeline, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %v", err)
@@ -23,6 +25,8 @@ func LoadPipeline(filename string) (*Pipeline, error) {
 	if err := json.Unmarshal(bytes, &pipeline); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON: %v", err)
 	}
+
+    pipeline.SetLogger(l)
 
 	return &pipeline, nil
 }

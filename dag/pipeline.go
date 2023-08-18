@@ -1,15 +1,166 @@
 package dag
 
+import (
+    "strings"
+    "github.com/sirupsen/logrus"
+)
+
+func NewPipeline(nodes []PipelineNode, l *logrus.Logger) *Pipeline {
+    return &Pipeline{
+        Nodes: nodes,
+        l: l,
+    }
+}
+
 type Pipeline struct {
   Nodes []PipelineNode `json:"nodes"`
+  l *logrus.Logger `json:"-"`
 } 
+
+func (p *Pipeline) GetNodes() []PipelineNode {
+    return p.Nodes
+}
+
+func (p *Pipeline) SetLogger(l *logrus.Logger) {
+    p.l = l
+}
+
+func (p Pipeline) FindRoots(
+    nodeInputs map[string]*PipelineNode,
+    nodeOutputs map[string]*PipelineNode,
+) []string {
+    var rawDataInputs []string
+    for _, nodeInput := range nodeInputs {
+        nodeInputInNodeOutputs := false
+        for _, nodeOutput := range nodeOutputs {
+            if (nodeInput == nodeOutput) {
+                nodeInputInNodeOutputs = true
+            }
+            break
+        }
+        if !nodeInputIntNodeOutputs {
+            rawDataInputs = append(rawDataInputs, nodeInput)
+        }
+    }
+    return rawDataInputs
+}
+
+func (p Pipeline) FindLeaves(
+    nodeInputs map[string]*PipelineNode,
+    nodeOutputs map[string]*PipelineNode,
+) []string {
+    var terminalDataOutputs []string
+    for _, nodeOutput := range NodeOutputs {
+        nodeOutputInNodeInputs := false
+        for _, nodeInput := range nodeInputs {
+            if (nodeOutput == nodeInput) {
+                nodeOutputInNodeInputs = true
+            }
+            break
+        }
+        if !nodeOutputInNodeInputs {
+            terminalDataOutputs = append(terminalDataOutputs, nodeOutput)
+        }
+    }
+    return terminalDataOutputs
+}
+
+// Returns up-to-date hashmap, and a boolean indicating whether an update happened.
+func (p Pipeline) AddToMap(
+    key string, 
+    nd *PipelineNode, 
+    hashmap map[string][]*PipelineNode,
+) (
+    map[string][]*PipelineNode,
+    bool,
+) {
+    _, exists := hashmap[key]
+    if !exists {
+        hashmap[key] = []*PipelineNode{}
+    }
+
+    values := hashmap[key]
+    for _, value := range values {
+        if value.Name == nd.Name {
+            return hashmap, false
+        }
+    }
+    values = append(values, nd)
+    hashmap[key] = values
+    return hashmap, true
+}
+
+func (p Pipeline) GetNodeInputsMap() {
+    nodeInputs := make(map[string][]*PipelineNode)
+    for _ nd := range p.Nodes {
+        inputs := nd.Inputs
+        for _, input := range nodeInputs {
+            nodeInputs = p.AddToMap(input, &nd, nodeInputs)
+        }
+    }
+}
+
+func (p Pipeline) GetNodeOutputsMap() {
+    nodeInputs := make(map[string][]*PipelineNode)
+    for _ nd := range p.Nodes {
+        output := nd.Outputs
+        for _, output := range nodeOutputs {
+            nodeOutputs = p.AddToMap(output, &nd, nodeOutputs)
+        }
+    }
+}
+
+// USE STACKS AND QUEUES OR RECURSION TO TRAVERSE INSTEAD
+func (p Pipeline) Link() error {
+    // Maps dataset name to all nodes that use it as an input.
+    nodeInputs := p.GetNodeInputsMap()
+    // Maps dataset name to all nodes that use it as an output.
+    nodeOutputs := p.GetNodeOutputsMap()
+
+    roots := FindRoots(nodeInputs, nodeOutputs)
+    var rootNodes []*PipelineNode
+    for _, root := range roots {
+        rootNodes = append(rootNodes, p.Find(root)
+    }
+    leaves := FindLeaves(nodeInputs, nodeOutputs)
+
+
+    //MAYBE START AT LEAVES AND GO UP TO ROOT, then we can just set p.Nodes to our queue.
+    // Queue
+    for len(rootsNodes) > 0 {
+        rootNode, rootNodes := rootNodes[len(rootNodes)-1], rootNodes[:len(rootNodes)-1] 
+        for _, output := range rootNode.Outputs {
+            // Mapping outputs of this node to all of the nodes that use them as inputs.
+            nodeChildren, ok := nodeInputs[output]
+            if !ok {
+                // In this case, we're dealing witha  leaf node.
+                // Logic to check if node is actually in "leaves"
+            }
+
+            // The Next items are just the children.
+            rootNode.Next = nodeChildren
+
+            for _, child := range nodeChildren {
+                // Need to link forward and backwards.
+                child.Prev = rootNode
+                // Add children to the queue to do the same to them.
+                rootNodes = append(rootNodes, child)
+            }
+
+        }
+
+    }
+}
 
 func (p Pipeline) Link() error {
 	nodeMap := make(map[string]*PipelineNode)
+
+    p.l.Trace("constructing node map")
 	for i := range p.Nodes {
 		nodeMap[p.Nodes[i].Name] = &p.Nodes[i]
 	}
 
+    p.l.Trace("creating linked tree")
 	for i := range p.Nodes {
 		p.Nodes[i].Next = []*PipelineNode{}
 		p.Nodes[i].Prev = []*PipelineNode{}
@@ -21,10 +172,12 @@ func (p Pipeline) Link() error {
 			if !exists {
 				continue
 			}
+            p.l.Trace("linking %s ---> %s", p.Nodes[i].Name, nextNode.Name)
 			p.Nodes[i].Next = append(p.Nodes[i].Next, nextNode)
 			nextNode.Prev = append(nextNode.Prev, &p.Nodes[i])
 		}
 	}
+    p.l.Trace("successfully linked nodes")
 	return nil
 }
 
@@ -52,15 +205,26 @@ func (p *Pipeline) calculateDistances() (map[string]int, map[string]int) {
 
 // Finds and returns the nodes in the middle of the pipeline
 func (p *Pipeline) FindMidpoint() []PipelineNode {
+    p.l.Tracef("finding midpoint node(s) from %d nodes", len(p.Nodes))
 	distanceToStart, distanceToEnd := p.calculateDistances()
 	var middleNodes []PipelineNode
 
+    var names []string
 	for _, node := range p.Nodes {
+        p.l.Tracef(
+            "node %s: distanceToStart=%d, distanceToEnd=%d",
+            node.Name,
+            distanceToStart[node.Name],
+            distanceToEnd[node.Name],
+        )
+        names = append(names, node.Name)
 		if distanceToStart[node.Name] == distanceToEnd[node.Name] {
 			middleNodes = append(middleNodes, node)
 		}
 	}
+    p.l.Tracef(strings.Join(names, " ---> "))
 
+    p.l.Tracef("found %d midpoint node(s)", len(middleNodes))
 	return middleNodes
 }
 
@@ -95,10 +259,10 @@ func (p *Pipeline) traverseAfter(node *PipelineNode, toBePruned map[string]bool)
 // If the boolean flag is true, all nodes before the provided node are pruned,
 // unless the ancestor node is a dependency for another branch.
 // If the boolean flag is false, all of the descendant nodes are pruned from the DAG.
-func (p *Pipeline) PruneNodes(pruneBefore bool, targetNode *PipelineNode) {
+func (p *Pipeline) PruneNodes(targetNode *PipelineNode) {
 	toBePruned := map[string]bool{}
 
-	if pruneBefore {
+	if *targetNode.IsValid {
 		p.traverseBefore(targetNode, toBePruned)
 	} else {
 		p.traverseAfter(targetNode, toBePruned)
