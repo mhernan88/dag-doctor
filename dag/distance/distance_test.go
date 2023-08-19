@@ -84,14 +84,22 @@ func TestDistanceCalculator__Midpoints(t *testing.T) {
     midpoints, err := dc.Midpoints([]*Node{startPtr}, 99)
     if err != nil {
         t.Error(err)
+        return
+    }
+    if len(nodes) == 0 {
+        t.Error("nodes input was modified")
+        return
     }
     if len(midpoints) == 0 {
         t.Error("dc found no midpoints")
+        return
     }
     if len(midpoints) != 1 {
         t.Errorf("dc found wrong number of midpoints; got=%d, want=1", len(midpoints))
+        return
     }
     if midpoints[0] != "node3a" {
         t.Errorf("dc found wrong midpoint; got='%s', want='node3a'", midpoints[0])
+        return
     }
 }
