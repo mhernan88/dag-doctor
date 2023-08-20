@@ -156,8 +156,6 @@ func processNodes(pipeline *dag.Pipeline, l *logrus.Logger) ([]*dag.Node, error)
     var rootNodes []*dag.Node
     for _, node := range pipeline.Nodes {
         if roots.Contains(node.Name) {
-            // OK HERE. It shows node1 and node2
-            l.Tracef("adding node %s to rootNodes", node.Name)
             nodeCopy := node
             rootNodes = append(rootNodes, &nodeCopy)
         }
