@@ -4,6 +4,7 @@ import (
     "os"
     "fmt"
     "slices"
+    "strings"
     goio "io"
     "encoding/json"
     mapset "github.com/deckarep/golang-set/v2"
@@ -35,10 +36,10 @@ func readNodes(filename string, l *logrus.Logger) (*dag.Pipeline, error) {
 	return &pipeline, nil
 }
 
-func findRoots(
-    nodes []dag.Node,
-    l *logrus.Logger,
-) ([]*dag.Node) {
+func gatherDatasets(nodes []dag.Node, l *logrus.Logger) (
+    mapset.Set[string],
+    mapset.Set[string],
+) {
     // Get all Input Datasets
     l.Trace("gathering pipeline inputs")
     inputs := mapset.NewSet[string]()
@@ -57,20 +58,41 @@ func findRoots(
         }
     }
 
-    // Root Datasets (i.e. raw datasets) must be Input - Output
-    rootDatasets := inputs.Difference(outputs)
+    return inputs, outputs
+}
 
-    // Find all nodes associated with Root Datasets
-    l.Trace("finding root nodes")
-    var rootNodes []*dag.Node
-    for _, rootDataset := range rootDatasets.ToSlice() {
+func findNonRoots(
+    nodes []dag.Node, 
+    nonRootDatasets mapset.Set[string],
+    l *logrus.Logger,
+) mapset.Set[string] {
+    // Find all nodes associated with non-Root Datasets
+    l.Trace("finding non-root nodes")
+    nonRootNodes := mapset.NewSet[string]()
+    for _, nonRootDataset := range nonRootDatasets.ToSlice() {
         for _, node := range nodes {
-            if slices.Contains(node.Inputs, rootDataset) {
-                rootNodes = append(rootNodes, &node)
+            if slices.Contains(node.Inputs, nonRootDataset) {
+                nonRootNodes.Add(node.Name)
             }
         }
     }
-    l.Tracef("found %d root nodes", len(rootNodes))
+
+    l.Tracef("found %d non-root nodes", len(nonRootNodes.ToSlice()))
+    return nonRootNodes
+}
+
+
+func findRoots(
+    nodes []dag.Node,
+    nonRootNodes mapset.Set[string],
+    l *logrus.Logger,
+) mapset.Set[string] {
+    allNodes := mapset.NewSet[string]()
+    for _, node := range nodes {
+        allNodes.Add(node.Name)
+    }
+    rootNodes := allNodes.Difference(nonRootNodes)
+    l.Tracef("found %d root nodes", len(rootNodes.ToSlice()))
     return rootNodes
 }
 
@@ -112,6 +134,7 @@ func backlinkNodes(nodes[]*dag.Node, upstream *dag.Node) []*dag.Node {
 
 func linkNodes(roots []*dag.Node, nodes []dag.Node, l *logrus.Logger) []*dag.Node {
     l.Trace("forward linking nodes")
+
     for i := range roots {
         roots[i] = linkNode(roots[i], nodes)
     }
@@ -119,19 +142,39 @@ func linkNodes(roots []*dag.Node, nodes []dag.Node, l *logrus.Logger) []*dag.Nod
     l.Trace("backward linking nodes")
     roots = backlinkNodes(roots, nil)
 
-    l.Trace("successfully linked nodes")
+    l.Tracef("successfully linked nodes (%d roots)", len(roots))
     return roots
 }
 
-func LoadNodes(filename string, l *logrus.Logger) ([]*dag.Node, error) {
+func processNodes(pipeline *dag.Pipeline, l *logrus.Logger) ([]*dag.Node, error) {
+    inputs, outputs := gatherDatasets(pipeline.Nodes, l)
+    intersection := inputs.Intersect(outputs)
+
+    nonRoots := findNonRoots(pipeline.Nodes, intersection, l)
+    roots := findRoots(pipeline.Nodes, nonRoots, l)
+
+    var rootNodes []*dag.Node
+    for _, node := range pipeline.Nodes {
+        if roots.Contains(node.Name) {
+            // OK HERE. It shows node1 and node2
+            l.Tracef("adding node %s to rootNodes", node.Name)
+            nodeCopy := node
+            rootNodes = append(rootNodes, &nodeCopy)
+        }
+    }
+
+    l.Tracef("linking roots: %s", strings.Join(roots.ToSlice(), ", "))
+    nodes := linkNodes(rootNodes, pipeline.Nodes, l)
+
+    return nodes, nil
+}
+
+func LoadAndProcessNodes(filename string, l *logrus.Logger) ([]*dag.Node, error) {
     pipeline, err := readNodes(filename, l)
     if err != nil {
         return nil, err
     }
-
-    roots := findRoots(pipeline.Nodes, l)
-    nodes := linkNodes(roots, pipeline.Nodes, l)
-    return nodes, nil
+    return processNodes(pipeline, l)
 }
 
 func LoadCatalog(filename string) (*map[string]dag.Dataset, error) {
