@@ -13,12 +13,12 @@ type DistanceCalculator struct {
     l *logrus.Logger
 }
 
-func (dc DistanceCalculator) Midpoints(nodes []*Node, limit int) ([]string, error) {
+func (dc DistanceCalculator) ComputeSplitCandidates(roots []*Node, limit int) ([]string, error) {
     var midpoints []string
 
     var nd *Node
-    for len(nodes) > 0 {
-        nd, nodes = nodes[len(nodes)-1], nodes[:len(nodes)-1]
+    for len(roots) > 0 {
+        nd, roots = roots[[len(roots)-1], roots[:len(roots)-1]
         dc.l.Tracef("popped node %s from queue", nd.Name)
 
         distanceToStart, err := dc.DistanceToStart(nd, limit)
@@ -36,7 +36,7 @@ func (dc DistanceCalculator) Midpoints(nodes []*Node, limit int) ([]string, erro
         }
 
         for _, child := range nd.Next {
-            nodes = append(nodes, child)
+            roots = append(roots, child)
         }
     }
     return midpoints, nil
