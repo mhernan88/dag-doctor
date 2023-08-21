@@ -7,7 +7,7 @@ import (
 )
 
 
-func ComputeSplitCandidates(roots []*dag.Node, limit int, l *logrus.Logger) ([]string, error) {
+func FindSplitCandidates(roots []*dag.Node, limit int, l *logrus.Logger) ([]string, error) {
     var midpoints []string
 
     var nd *Node
