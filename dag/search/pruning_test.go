@@ -73,7 +73,7 @@ func TestRemoveParent2(t *testing.T) {
         t.Errorf("want len=0, got %d", len(grandchild.Prev))
     }
 
-    if len(grandparent.Next) > 1 {
+    if len(grandparent.Next) != 1 {
         t.Errorf("want len=1, got %d", len(grandparent.Next))
     }
 }
