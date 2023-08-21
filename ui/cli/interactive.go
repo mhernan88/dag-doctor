@@ -3,11 +3,13 @@ package distance
 import (
     "fmt"
     "github.com/mhernan88/dag-bisect/dag"
+    "github.com/mhernan88/dag-bisect/dag/search"
     "github.com/sirupsen/logrus"
 )
 
 func NewInspector(
     roots []*dag.Node, 
+    splitter search.Splitter,
     catalog map[string]dag.Dataset, 
     l *logrus.Logger
 ) Inspector {
@@ -15,6 +17,7 @@ func NewInspector(
         roots: roots,
         goodNodes: []*dag.Node{},
         badNodes: []*dag.Node{},
+        splitter: search.Splitter,
         catalog: catalog,
         l: l,
     }
@@ -24,6 +27,7 @@ type Inspector struct {
     roots []*dag.Node
     goodNodes []*dag.Node
     badNodes []*dag.Node
+    splitter search.Splitter
     catalog map[string]dag.Dataset
     l *logrus.Logger
 }

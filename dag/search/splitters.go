@@ -18,15 +18,22 @@ type Splitter interface {
     FindCandidate(roots []*dag.Node) (string, error)
 }
 
+func NewFamilyTreeSplitter(recursionLimit int, l *logrus.Logger) FamilyTreeSplitter {
+    return FamilyTreeSplitter{
+        recursionLimit: recursionLimit,
+        l: l,
+    }
+}
+
 // Splitter Based on Node Distance
-type DistanceSplitter struct {
+type FamilyTreeSplitter struct {
     recursionLimit int
     l *logrus.Logger
 }
 
 // FindCandidate gets the best node to split a DAG along based on
 // the number of ancestors and number of descendants.
-func (s DistanceSplitter) FindCandidate(roots []*dag.Node) (string, error) {
+func (s FamilyTreeSplitter) FindCandidate(roots []*dag.Node) (string, error) {
     var candidates []NodeScore
 
     var nd *dag.Node

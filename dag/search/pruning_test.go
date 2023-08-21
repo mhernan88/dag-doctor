@@ -2,31 +2,51 @@ package search
 
 import (
     "testing"
+    "github.com/sirupsen/logrus"
     "github.com/mhernan88/dag-bisect/dag"
 )
 
 func setupDAG() map[string]*dag.Node {
-    node5a := dag.Node{Name: "node5a"}
-    node4a := dag.Node{Name: "node4a"}
-    node3a := dag.Node{Name: "node3a"}
-    node3b := dag.Node{Name: "node3b"}
-    node2 := dag.Node{Name: "node2"}
-    node1 := dag.Node{Name: "node1"}
+    node5a := dag.Node{
+        Name: "node5a",
+        Prev: make(map[string]*dag.Node),
+        Next: make(map[string]*dag.Node)}
+    node4a := dag.Node{
+        Name: "node4a",
+        Prev: make(map[string]*dag.Node),
+        Next: make(map[string]*dag.Node)}
+    node3a := dag.Node{
+        Name: "node3a",
+        Prev: make(map[string]*dag.Node),
+        Next: make(map[string]*dag.Node)}
+    node3b := dag.Node{
+        Name: "node3b",
+        Prev: make(map[string]*dag.Node),
+        Next: make(map[string]*dag.Node)}
+    node2 := dag.Node{
+        Name: "node2",
+        Prev: make(map[string]*dag.Node),
+        Next: make(map[string]*dag.Node)}
+    node1 := dag.Node{
+        Name: "node1",
+        Prev: make(map[string]*dag.Node),
+        Next: make(map[string]*dag.Node)}
 
-    node5a.Prev = []*dag.Node{&node4a}
+    node5a.Prev[node4a.Name] = &node4a
 
-    node4a.Next = []*dag.Node{&node5a}
-    node4a.Prev = []*dag.Node{&node3a}
+    node4a.Next[node5a.Name] = &node5a
+    node4a.Prev[node3a.Name] = &node3a
 
-    node3a.Next = []*dag.Node{&node4a}
-    node3a.Prev = []*dag.Node{&node2}
+    node3a.Next[node4a.Name] = &node4a
+    node3a.Prev[node2.Name] = &node2
 
-    node3b.Prev = []*dag.Node{&node2}
+    node3b.Prev[node2.Name] = &node2
 
-    node2.Next = []*dag.Node{&node3a, &node3b}
-    node2.Prev = []*dag.Node{&node1}
+    node2.Next[node3a.Name] = &node3a
+    node2.Next[node3b.Name] = &node3b
+    node2.Prev[node1.Name] = &node1
 
-    node1.Next = []*dag.Node{&node2}
+    node1.Next[node2.Name] = &node2
 
     nodes := make(map[string]*dag.Node)
     nodes["node1"] = &node1
@@ -39,45 +59,75 @@ func setupDAG() map[string]*dag.Node {
     return nodes
 }
 
-
-func TestRemoveParent1(t *testing.T) {
+func TestPruneBefore1(t *testing.T) {
     nodes := setupDAG()
-    grandchild := nodes["node3a"]
-    grandparent := nodes["node1"]
+    roots := make(map[string]*dag.Node)
+    roots["node1"] = nodes["node1"]
+    l := logrus.New()
+    l.SetLevel(logrus.TraceLevel)
 
-    err := removeParent(grandchild, "node2")
+    pruner := NewDefaultPruner(99, l)
+
+    prunedNodes, err := pruner.PruneBefore(nodes["node2"], roots)
     if err != nil {
         t.Error(err)
     }
-
-    if len(grandchild.Prev) > 0 {
-        t.Errorf("want len=0, got %d", len(grandchild.Prev))
+    if len(prunedNodes) != 1 {
+        t.Errorf("len(prunedNodes) incorrect; want=1, got=%d (%v)", len(prunedNodes), prunedNodes)
     }
+    t.Logf("pruned nodes: %v", prunedNodes)
 
-    if len(grandparent.Next) > 0 {
-        t.Errorf("want len=0, got %d", len(grandparent.Next))
+    if len(nodes["node2"].Prev) != 0 {
+        t.Errorf("expected node2 to have 0 parents, but it had %d", len(nodes["node2"].Prev))
     }
 }
 
-func TestRemoveParent2(t *testing.T) {
+func TestPruneBefore2(t *testing.T) {
     nodes := setupDAG()
-    grandchild := nodes["node4a"]
-    grandparent := nodes["node2"]
+    roots := make(map[string]*dag.Node)
+    roots["node1"] = nodes["node1"]
+    l := logrus.New()
+    l.SetLevel(logrus.TraceLevel)
 
-    err := removeParent(grandchild, "node3a")
+    pruner := NewDefaultPruner(99, l)
+
+    prunedNodes, err := pruner.PruneBefore(nodes["node5a"], roots)
     if err != nil {
         t.Error(err)
     }
-
-    if len(grandchild.Prev) > 0 {
-        t.Errorf("want len=0, got %d", len(grandchild.Prev))
+    if len(prunedNodes) != 2 {
+        t.Errorf("len(prunedNodes) incorrect; want=2, got=%d (%v)", len(prunedNodes), prunedNodes)
     }
+}
 
-    if len(grandparent.Next) != 1 {
-        t.Errorf("want len=1, got %d", len(grandparent.Next))
+func TestPruneAfter1(t *testing.T) {
+    nodes := setupDAG()
+    l := logrus.New()
+    l.SetLevel(logrus.TraceLevel)
+
+    pruner := NewDefaultPruner(99, l)
+
+    prunedNodes, err := pruner.PruneAfter(nodes["node2"])
+    if err != nil {
+        t.Error(err)
     }
+    if len(prunedNodes) != 4 {
+        t.Errorf("len(prunedNodes) incorrect; want=4, got=%d (%v)", len(prunedNodes), prunedNodes)
+    }
+}
 
-    if grandparent.Next[0].Name != "node3b" {
-        t.Errorf("want name='node3b', got '%s'", grandparent.Next[0].Name)
+func TestPruneAfter(t *testing.T) {
+    nodes := setupDAG()
+    l := logrus.New()
+    l.SetLevel(logrus.TraceLevel)
+
+    pruner := NewDefaultPruner(99, l)
+
+    prunedNodes, err := pruner.PruneAfter(nodes["node3a"])
+    if err != nil {
+        t.Error(err)
+    }
+    if len(prunedNodes) != 2 {
+        t.Errorf("len(prunedNodes) incorrect; want=2, got=%d (%v)", len(prunedNodes), prunedNodes)
     }
 }

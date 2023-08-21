@@ -1,5 +1,5 @@
 package search
-//
+
 // import (
 //     "fmt"
 //     "github.com/mhernan88/dag-bisect/dag"

@@ -25,35 +25,35 @@ package dag
 //     p.l = l
 // }
 //
-func (p Pipeline) FindRoots(
-    nodeInputs map[string][]*PipelineNode,
-    nodeOutputs map[string][]*PipelineNode,
-) []string {
-    var rawDataInputs map[string]interface{}
-    for inputDataSet, inputNodeSlice := range nodeInputs {
-        inputDataSetFoundInOutputDataSets := false
-
-        for outputDataSet, _ := range nodeOutputs {
-            if (inputDataSet == outputDataSet) {
-                inputDataSetFoundInOutputDataSets = true
-            }
-            break
-        }
-
-        if !inputDataSetFoundInOutputDataSets {
-            for _, inputNode := range inputNodeSlice {
-                var x interface{}
-                rawDataInputs[inputNode.Name] = x
-            }
-        }
-    }
-
-    var rawInputNodeSlice []string
-    for rawInputNode, _ := range rawDataInputs {
-        rawInputNodeSlice = append(rawInputNodeSlice, rawInputNode)
-    }
-    return rawInputNodeSlice
-}
+// func (p Pipeline) FindRoots(
+//     nodeInputs map[string][]*PipelineNode,
+//     nodeOutputs map[string][]*PipelineNode,
+// ) []string {
+//     var rawDataInputs map[string]interface{}
+//     for inputDataSet, inputNodeSlice := range nodeInputs {
+//         inputDataSetFoundInOutputDataSets := false
+//
+//         for outputDataSet, _ := range nodeOutputs {
+//             if (inputDataSet == outputDataSet) {
+//                 inputDataSetFoundInOutputDataSets = true
+//             }
+//             break
+//         }
+//
+//         if !inputDataSetFoundInOutputDataSets {
+//             for _, inputNode := range inputNodeSlice {
+//                 var x interface{}
+//                 rawDataInputs[inputNode.Name] = x
+//             }
+//         }
+//     }
+//
+//     var rawInputNodeSlice []string
+//     for rawInputNode, _ := range rawDataInputs {
+//         rawInputNodeSlice = append(rawInputNodeSlice, rawInputNode)
+//     }
+//     return rawInputNodeSlice
+// }
 //
 // func (p Pipeline) FindLeaves(
 //     nodeInputs map[string]*PipelineNode,
