@@ -76,4 +76,8 @@ func TestRemoveParent2(t *testing.T) {
     if len(grandparent.Next) != 1 {
         t.Errorf("want len=1, got %d", len(grandparent.Next))
     }
+
+    if grandparent.Next[0].Name != "node3b" {
+        t.Errorf("want name='node3b', got '%s'", grandparent.Next[0].Name)
+    }
 }
