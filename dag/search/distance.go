@@ -1,44 +1,15 @@
-package distance
+package search
 
 import (
     "errors"
+    "github.com/mhernan88/dag-bisect/dag"
     "github.com/sirupsen/logrus"
-    "github.com/mhernan88/dag-bisect/dag
 )
 
 
-func FindSplitCandidates(roots []*dag.Node, limit int, l *logrus.Logger) ([]string, error) {
-    var midpoints []string
-
-    var nd *Node
-    for len(roots) > 0 {
-        nd, roots = roots[[len(roots)-1], roots[:len(roots)-1]
-        l.Tracef("popped node %s from queue", nd.Name)
-
-        distanceToStart, err := distanceToStart(nd, limit)
-        if err != nil {
-            return nil, err
-        }
-
-        distanceToEnd, err := distanceToEnd(nd, limit)
-        if err != nil {
-            return nil, err
-        }
-
-        if distanceToStart == distanceToEnd {
-            midpoints = append(midpoints, nd.Name) 
-        }
-
-        for _, child := range nd.Next {
-            roots = append(roots, child)
-        }
-    }
-    return midpoints, nil
-}
-
 // DistanceToStart calculates the longest path to the start of the dag.
 func distanceToStart(node *dag.Node, limit int, l *logrus.Logger) (int, error) {
-    dc.l.Trace("calculating DistanceToStart()")
+    l.Trace("calculating DistanceToStart()")
 
     // Edge cases where node is leaf node.
     if (node.Prev == nil) || (len(node.Prev) == 0) {
@@ -87,7 +58,7 @@ func distanceToStart(node *dag.Node, limit int, l *logrus.Logger) (int, error) {
 }
 
 // DistanceToEnd calculates the longest path to the end of the dag.
-func distanceToEnd(node *dag.Node, limit int) (int, error) {
+func distanceToEnd(node *dag.Node, limit int, l *logrus.Logger) (int, error) {
     l.Trace("calculating DistanceToEnd()")
 
     // Edge cases where node is leaf node.
