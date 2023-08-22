@@ -7,7 +7,7 @@ import (
 )
 
 func (ui *UI) CheckNode(node *data.Node) (bool, []string, error) {
-    fmt.Printf("inspecting node: %s\n", node.Name)
+    fmt.Printf("|->inspecting node: %s\n", node.Name)
     allDatasetsOK := true
 
     for _, output := range node.Outputs {
