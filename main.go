@@ -13,27 +13,52 @@ const version = "v0.1.0"
 
 var flags = []cli.Flag{
     &cli.BoolFlag{
-        Name: "verbose",
-        Aliases: []string{"v"},
+        Name: "v",
         Value: false,
+        Usage: "verbose - info level",
+    },
+    &cli.BoolFlag{
+        Name: "vv",
+        Value: false,
+        Usage: "verbose - debug level",
+    },
+    &cli.BoolFlag{
+        Name: "vvv",
+        Value: false,
+        Usage: "verbose - trace level",
     },
     &cli.StringFlag{
-        Name: "pipeline",
-        Aliases: []string{"p"},
+        Name: "dag",
+        Aliases: []string{"d"},
         Value: "dag.json",
+        Usage: "filename of serialized dag",
     },
     &cli.StringFlag{
         Name: "catalog",
         Aliases: []string{"c"},
         Value: "catalog.json",
+        Usage: "filename of serialized catalog",
     },
 }
 
 func action(c *cli.Context) error {
     l := logrus.New()
-    if c.Bool("verbose") {
-        l.SetLevel(logrus.TraceLevel)
+    l.SetLevel(logrus.WarnLevel)
+
+    if c.Bool("v") {
+        l.SetLevel(logrus.InfoLevel)
+        l.Info("logging set to INFO level")
+    } 
+
+    if c.Bool("vv") {
+        l.SetLevel(logrus.DebugLevel)
+        l.Info("logging set to DEBUG level")
     }
+
+    if c.Bool("vvv") {
+        l.SetLevel(logrus.TraceLevel)
+        l.Info("logging set to TRACE level")
+    } 
 
     fmt.Printf("dag-bisect %s\n", version)
     return nil
