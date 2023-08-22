@@ -222,7 +222,14 @@ func LoadAndProcessNodes(
     if err != nil {
         return nil, err
     }
-    return processNodes(pipeline, maxRecursionDepth, l)
+    nodes, err := processNodes(pipeline, maxRecursionDepth, l)
+    if err != nil {
+        return nil, err
+    }
+    if len(nodes) == 0 {
+        return nil, fmt.Errorf("0 nodes loaded!")
+    }
+    return nodes, nil
 }
 
 func LoadCatalog(filename string) (*map[string]dag.Dataset, error) {
