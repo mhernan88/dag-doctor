@@ -8,6 +8,7 @@ import (
     "github.com/urfave/cli/v2"
     "github.com/sirupsen/logrus"
     "github.com/mhernan88/dag-bisect/data"
+    "github.com/mhernan88/dag-bisect/cmd"
 )
 
 const version = "v0.1.0"
@@ -63,17 +64,22 @@ func action(c *cli.Context) error {
 
     fmt.Printf("dag-bisect %s\n", version)
 
+    l.Debug("loading catalog")
     catalog, err := data.LoadCatalog(c.String("catalog"))
     if err != nil {
         return err
     }
     l.Debugf("catalog: %v", catalog)
 
+    l.Debug("loading dag")
     dag, err := data.LoadDAG(c.String("dag"))
     if err != nil {
         return err
     }
     l.Debugf("dag: %v", dag)
+
+    ui := cmd.NewUI(dag, catalog, l)
+    ui.Run()
 
     return nil
 }
