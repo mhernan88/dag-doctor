@@ -49,6 +49,7 @@ func (s DefaultSplitter) FindCandidate(roots map[string]*data.Node) (*data.Node,
         mean := float64(numAncestors + numDescendants) / 2
         score := mean - diff
 
+        s.l.Debugf("node '%s' has split score: %f", key, score)
         if score > bestScore {
             bestScore = score
             candidate = nd
@@ -64,5 +65,6 @@ func (s DefaultSplitter) FindCandidate(roots map[string]*data.Node) (*data.Node,
     if candidate == nil {
         return nil, fmt.Errorf("failed to select a split candidate")
     }
+    s.l.Debugf("selected candidate '%s' has best split score: %f", candidate.Name, bestScore)
     return candidate, nil
 }
