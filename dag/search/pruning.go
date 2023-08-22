@@ -141,7 +141,8 @@ func (p DefaultPruner) PruneAfter(start *dag.Node) ([]string, error) {
     // Traverse Forwards 
     i := 0
     for len(keys) > 0 {
-        key, keys := keys[len(keys)-1], keys[:len(keys)-1]
+        key := keys[len(keys)-1]
+        keys = keys[:len(keys)-1]
         node := nodes[key]
 
         for _, child := range node.Next {
