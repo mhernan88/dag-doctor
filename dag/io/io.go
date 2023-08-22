@@ -36,7 +36,7 @@ func readNodes(filename string, l *logrus.Logger) (*dag.Pipeline, error) {
 	return &pipeline, nil
 }
 
-func gatherDatasets(nodes []dag.Node, l *logrus.Logger) (
+func gatherDatasets(nodes map[string]dag.Node, l *logrus.Logger) (
     mapset.Set[string],
     mapset.Set[string],
 ) {
@@ -62,7 +62,7 @@ func gatherDatasets(nodes []dag.Node, l *logrus.Logger) (
 }
 
 func findNonRoots(
-    nodes []dag.Node, 
+    nodes map[string]dag.Node, 
     nonRootDatasets mapset.Set[string],
     l *logrus.Logger,
 ) mapset.Set[string] {
@@ -70,9 +70,9 @@ func findNonRoots(
     l.Trace("finding non-root nodes")
     nonRootNodes := mapset.NewSet[string]()
     for _, nonRootDataset := range nonRootDatasets.ToSlice() {
-        for _, node := range nodes {
+        for name, node := range nodes {
             if slices.Contains(node.Inputs, nonRootDataset) {
-                nonRootNodes.Add(node.Name)
+                nonRootNodes.Add(name)
             }
         }
     }
@@ -83,25 +83,25 @@ func findNonRoots(
 
 
 func findRoots(
-    nodes []dag.Node,
+    nodes map[string]dag.Node,
     nonRootNodes mapset.Set[string],
     l *logrus.Logger,
 ) mapset.Set[string] {
     allNodes := mapset.NewSet[string]()
-    for _, node := range nodes {
-        allNodes.Add(node.Name)
+    for name, _ := range nodes {
+        allNodes.Add(name)
     }
     rootNodes := allNodes.Difference(nonRootNodes)
     l.Tracef("found %d root nodes", len(rootNodes.ToSlice()))
     return rootNodes
 }
 
-func linkNode(root *dag.Node, nodes []dag.Node) *dag.Node {
+func linkNode(root *dag.Node, nodes map[string]dag.Node) *dag.Node {
     // Look through all outputs...
     for _, output := range root.Outputs{
         // And then look through entire pipeline...
-        for _, node := range nodes {
-            if node.Name == root.Name {
+        for nodeName, node := range nodes {
+            if nodeName == root.Name {
                 continue
             }
 
@@ -109,70 +109,114 @@ func linkNode(root *dag.Node, nodes []dag.Node) *dag.Node {
             // is an immediate descendant of root.
             if slices.Contains(node.Inputs, output) {
                 nodePtr := linkNode(&node, nodes)
-                root.Next = append(root.Next, nodePtr)
+                root.Next[nodePtr.Name] = nodePtr
             }
         }
     }
     return root
 }
 
-func backlinkNodes(nodes[]*dag.Node, upstream *dag.Node) []*dag.Node {
-    // For each node...
-    for i := range nodes {
-        // If an upstream is provided, then add it to node.Prev
-        if upstream != nil {
-            nodes[i].Prev = append(nodes[i].Prev, upstream)
-        }
-
-        if nodes[i].Next != nil {
-            // Go to the next node and repeat.
-            nodes[i].Next = backlinkNodes(nodes[i].Next, nodes[i])
+func backlinkNodes(
+    nodes map[string]*dag.Node, 
+    upstream *dag.Node,
+    recursionDepth,
+    maxRecursionDepth int,
+    l *logrus.Logger,
+) (map[string]*dag.Node, error) {
+    if maxRecursionDepth > 0 {
+        if recursionDepth > maxRecursionDepth {
+            return nil, fmt.Errorf("backlinkNodes reached maxRecursionDepth")
         }
     }
-    return nodes
+    // For each node...
+    for name, _ := range nodes {
+        l.Tracef("backlinking node %s", name)
+        // If an upstream is provided, then add it to node.Prev
+        if upstream != nil {
+            nodes[name].Prev[upstream.Name] = upstream
+        }
+
+        if nodes[name].Next != nil {
+            // Go to the next node and repeat.
+            l.Tracef("recursively running backlinkNodes() on %v", nodes[name].Next)
+            linkedNodePtrs, err := backlinkNodes(
+                nodes[name].Next, 
+                nodes[name],
+                recursionDepth + 1,
+                maxRecursionDepth,
+                l,
+            )
+            if err != nil {
+                return nil, err
+            }
+            for _, linkedNodePtr := range linkedNodePtrs {
+                nodes[name].Next[linkedNodePtr.Name] = linkedNodePtr
+            }
+        }
+    }
+    return nodes, nil
 }
 
-func linkNodes(roots []*dag.Node, nodes []dag.Node, l *logrus.Logger) []*dag.Node {
+func linkNodes(
+    roots map[string]*dag.Node, 
+    nodes map[string]dag.Node, 
+    maxRecursionDepth int,
+    l *logrus.Logger,
+) (map[string]*dag.Node, error) {
     l.Trace("forward linking nodes")
 
-    for i := range roots {
-        roots[i] = linkNode(roots[i], nodes)
+    for name, root := range roots {
+        roots[name] = linkNode(root, nodes)
     }
 
     l.Trace("backward linking nodes")
-    roots = backlinkNodes(roots, nil)
+    roots, err := backlinkNodes(roots, nil, 0, maxRecursionDepth, l)
+    if err != nil {
+        return nil, err
+    }
 
     l.Tracef("successfully linked nodes (%d roots)", len(roots))
-    return roots
+    return roots, nil
 }
 
-func processNodes(pipeline *dag.Pipeline, l *logrus.Logger) ([]*dag.Node, error) {
+func processNodes(
+    pipeline *dag.Pipeline, 
+    maxRecursionDepth int,
+    l *logrus.Logger,
+) (map[string]*dag.Node, error) {
     inputs, outputs := gatherDatasets(pipeline.Nodes, l)
     intersection := inputs.Intersect(outputs)
 
     nonRoots := findNonRoots(pipeline.Nodes, intersection, l)
     roots := findRoots(pipeline.Nodes, nonRoots, l)
 
-    var rootNodes []*dag.Node
-    for _, node := range pipeline.Nodes {
-        if roots.Contains(node.Name) {
+    rootNodes := make(map[string]*dag.Node)
+    for name, node := range pipeline.Nodes {
+        if roots.Contains(name) {
             nodeCopy := node
-            rootNodes = append(rootNodes, &nodeCopy)
+            rootNodes[name] = &nodeCopy
         }
     }
 
     l.Tracef("linking roots: %s", strings.Join(roots.ToSlice(), ", "))
-    nodes := linkNodes(rootNodes, pipeline.Nodes, l)
+    nodes, err := linkNodes(rootNodes, pipeline.Nodes, maxRecursionDepth, l)
+    if err != nil {
+        return nil, err
+    }
 
     return nodes, nil
 }
 
-func LoadAndProcessNodes(filename string, l *logrus.Logger) ([]*dag.Node, error) {
+func LoadAndProcessNodes(
+    filename string, 
+    maxRecursionDepth int,
+    l *logrus.Logger,
+) (map[string]*dag.Node, error) {
     pipeline, err := readNodes(filename, l)
     if err != nil {
         return nil, err
     }
-    return processNodes(pipeline, l)
+    return processNodes(pipeline, maxRecursionDepth, l)
 }
 
 func LoadCatalog(filename string) (*map[string]dag.Dataset, error) {

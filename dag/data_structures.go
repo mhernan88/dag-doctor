@@ -1,7 +1,7 @@
 package dag
 
 type Pipeline struct {
-    Nodes []Node `json:"nodes"`
+    Nodes map[string]Node `json:"nodes"`
 }
 
 type Node struct {

@@ -8,34 +8,44 @@ import (
     "github.com/mhernan88/dag-bisect/dag"
 )
 
-func setupNodeList() []dag.Node {
-    return []dag.Node{
-        dag.Node{
-            Name: "node1",
-            Inputs: []string{"dataset1", "dataset2"},
-            Outputs: []string{"dataset3", "dataset4"},
-        },
-        dag.Node{
-            Name: "node2",
-            Inputs: []string{"dataset2", "dataset5"},
-            Outputs: []string{"dataset6", "dataset7"},
-        },
-        dag.Node{
-            Name: "node3",
-            Inputs: []string{"dataset3", "dataset6"},
-            Outputs: []string{"dataset8"},
-        },
-        dag.Node{
-            Name: "node4",
-            Inputs: []string{"dataset1", "dataset4"},
-            Outputs: []string{"dataset9"},
-        },
-        dag.Node{
-            Name: "node5",
-            Inputs: []string{"dataset7"},
-            Outputs: []string{"dataset10"},
-        },
+func setupNodeList() map[string]dag.Node {
+    out := make(map[string]dag.Node)
+    out["node1"] = dag.Node{
+        Name: "node1",
+        Inputs: []string{"dataset1", "dataset2"},
+        Outputs: []string{"dataset3", "dataset4"},
+        Prev: make(map[string]*dag.Node),
+        Next: make(map[string]*dag.Node),
     }
+    out["node2"] = dag.Node{
+        Name: "node2",
+        Inputs: []string{"dataset2", "dataset5"},
+        Outputs: []string{"dataset6", "dataset7"},
+        Prev: make(map[string]*dag.Node),
+        Next: make(map[string]*dag.Node),
+    }
+    out["node3"] = dag.Node{
+        Name: "node3",
+        Inputs: []string{"dataset3", "dataset6"},
+        Outputs: []string{"dataset8"},
+        Prev: make(map[string]*dag.Node),
+        Next: make(map[string]*dag.Node),
+    }
+    out["node4"] = dag.Node{
+        Name: "node4",
+        Inputs: []string{"dataset1", "dataset4"},
+        Outputs: []string{"dataset9"},
+        Prev: make(map[string]*dag.Node),
+        Next: make(map[string]*dag.Node),
+    }
+    out["node5"] = dag.Node{
+        Name: "node5",
+        Inputs: []string{"dataset7"},
+        Outputs: []string{"dataset10"},
+        Prev: make(map[string]*dag.Node),
+        Next: make(map[string]*dag.Node),
+    }
+    return out
 }
 
 func TestFindNonRoots(t *testing.T) {
@@ -97,8 +107,9 @@ func TestProcessNodes(t *testing.T) {
     l.SetLevel(logrus.TraceLevel)
 
     pipeline := dag.Pipeline{Nodes: setupNodeList()}
+    maxRecursionDepth := 99
 
-    roots, err := processNodes(&pipeline, l)
+    roots, err := processNodes(&pipeline, maxRecursionDepth, l)
     if err != nil {
         t.Error(err)
     }
