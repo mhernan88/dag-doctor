@@ -8,6 +8,7 @@ import (
     "github.com/urfave/cli/v2"
     "github.com/sirupsen/logrus"
     "github.com/mhernan88/dag-bisect/data"
+    "github.com/mhernan88/dag-bisect/splitters"
     "github.com/mhernan88/dag-bisect/cmd"
 )
 
@@ -41,6 +42,11 @@ var flags = []cli.Flag{
         Value: "catalog.json",
         Usage: "filename of serialized catalog",
     },
+    &cli.IntFlag{
+        Name: "iteration_limit",
+        Value: 99,
+        Usage: "maximum iteration/recursion depth",
+    },
 }
 
 func action(c *cli.Context) error {
@@ -64,21 +70,27 @@ func action(c *cli.Context) error {
 
     fmt.Printf("dag-bisect %s\n", version)
 
+    l.Debug("initializing splitter")
+    splitter := splitters.NewDefaultSplitter(
+        c.Int("iteration_limit"),
+        l,
+    )
+
     l.Debug("loading catalog")
     catalog, err := data.LoadCatalog(c.String("catalog"))
     if err != nil {
         return err
     }
-    l.Debugf("catalog: %v", catalog)
+    l.Tracef("catalog: %v", catalog)
 
     l.Debug("loading dag")
     dag, err := data.LoadDAG(c.String("dag"))
     if err != nil {
         return err
     }
-    l.Debugf("dag: %v", dag)
+    l.Tracef("dag: %v", dag)
 
-    ui := cmd.NewUI(dag, catalog, l)
+    ui := cmd.NewUI(dag, catalog, splitter, l)
     ui.Run()
 
     return nil
