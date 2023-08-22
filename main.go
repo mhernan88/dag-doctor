@@ -99,7 +99,7 @@ func action(c *cli.Context) error {
     if err != nil {
         return err
     }
-    l.Infof("loaded %d root nodes from dag", len(dag))
+    l.Infof("loaded %d root nodes (+ additional child nodes) from dag", len(dag))
     if len(dag) == 0 {
         return fmt.Errorf("failed to load dag")
     }
