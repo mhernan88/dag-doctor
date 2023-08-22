@@ -9,6 +9,7 @@ import (
     "github.com/sirupsen/logrus"
     "github.com/mhernan88/dag-bisect/data"
     "github.com/mhernan88/dag-bisect/splitters"
+    "github.com/mhernan88/dag-bisect/pruners"
     "github.com/mhernan88/dag-bisect/cmd"
 )
 
@@ -76,6 +77,12 @@ func action(c *cli.Context) error {
         l,
     )
 
+    l.Debug("initializing pruner")
+    pruner := pruners.NewDefaultPruner(
+        c.Int("iteration_limit"),
+        l,
+    )
+
     l.Debug("loading catalog")
     catalog, err := data.LoadCatalog(c.String("catalog"))
     if err != nil {
@@ -90,7 +97,7 @@ func action(c *cli.Context) error {
     }
     l.Tracef("dag: %v", dag)
 
-    ui := cmd.NewUI(dag, catalog, splitter, l)
+    ui := cmd.NewUI(dag, catalog, splitter, pruner, l)
     ui.Run()
 
     return nil
