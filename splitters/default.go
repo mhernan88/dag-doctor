@@ -30,8 +30,12 @@ func (s DefaultSplitter) FindCandidate(roots map[string]*data.Node) (*data.Node,
         keys = append(keys, key)
     }
 
+    if len(keys) == 0 {
+        return nil, fmt.Errorf("failed to find dag keys")
+    }
+
     var nd *data.Node
-    for len(roots) > 0 {
+    for len(keys) > 0 {
         key = keys[len(keys)-1]
         keys = keys[:len(keys)-1]
         nd = roots[key]
