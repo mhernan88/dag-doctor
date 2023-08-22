@@ -9,7 +9,7 @@ import(
 )
 
 type Pruner interface {
-    PruneBefore(start *dag.Node) ([]string, error)
+    PruneBefore(start *dag.Node, roots map[string]*dag.Node) ([]string, error)
     PruneAfter(start *dag.Node) ([]string, error)
 }
 

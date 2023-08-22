@@ -4,6 +4,8 @@ go 1.21.0
 
 require (
 	github.com/deckarep/golang-set/v2 v2.3.1
+	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
+	github.com/enescakir/emoji v1.0.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.25.7
 )

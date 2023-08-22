@@ -6,11 +6,10 @@ import (
 
 	"github.com/urfave/cli/v2"
     "github.com/sirupsen/logrus"
-    "github.com/mhernan88/dag-bisect/dag"
+    "github.com/mhernan88/dag-bisect/dag/io"
+    "github.com/mhernan88/dag-bisect/dag/search"
+    "github.com/mhernan88/dag-bisect/ui/cmd"
 )
-
-var yesVariants = []rune{'y', 'Y'}
-var noVariants = []rune{'n', 'N'}
 
 var flags = []cli.Flag{
     &cli.BoolFlag{
@@ -43,46 +42,31 @@ func main() {
             }
 
             l.Tracef("loading pipeline file %s", c.String("pipeline"))
-            pipelinePtr, err := dag.LoadPipeline(c.String("pipeline"), l)
+            roots, err := io.LoadAndProcessNodes(c.String("pipeline"), 99, l)
             if err != nil {
                 return err
-            }
-
-            if pipelinePtr == nil {
-                return fmt.Errorf("ERR: pipeline was nil")
-            }
-            pipeline := *pipelinePtr
-
-            if pipeline.GetNodes() == nil {
-                return fmt.Errorf("ERR: pipeline has no nodes")
             }
 
             l.Tracef(
-                "successfully loaded pipeline file %s with %d nodes",
+                "successfully loaded dag file %s with %d root nodes",
                 c.String("pipeline"),
-                len(pipeline.GetNodes()),
+                len(roots),
             )
 
-
-            l.Tracef("linking pipeline nodes")
-            err = pipeline.Link()
-            if err != nil {
-                return err
-            }
-            l.Tracef("successfully linked pipeline nodes")
-
             l.Tracef("loading catalog file %s", c.String("catalog"))
-            catalog, err := dag.LoadCatalog(c.String("catalog"))
+            catalog, err := io.LoadCatalog(c.String("catalog"))
             if err != nil {
                 return err
             }
             l.Tracef("successfully loaded catalog file %s", c.String("catalog"))
             
-            inspector := dag.NewInspector(*catalog, pipeline, l)
+            splitter := search.NewFamilyTreeSplitter(99, l)
+            pruner := search.NewDefaultPruner(99, l)
+            inspector := cmd.NewInspector(roots, splitter, pruner, *catalog, l)
 
 			// Iterate through the inspection process
             l.Tracef("performing binary error search on pipeline")
-            _, err = inspector.IsPipelineOK()
+            _, err = inspector.IsDAGOK(99)
             if err != nil {
                 l.Errorf(err.Error())
             }

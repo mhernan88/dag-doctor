@@ -1,6 +1,6 @@
 {
-    "nodes": [
-        {
+    "nodes": {
+        "preprocess_companies_and_employees": {
             "name": "preprocess_companies_and_employees",
             "inputs": [
                 "companies",
@@ -11,7 +11,7 @@
                 "preprocessed_employees"
             ]
         },
-        {
+        "preprocess_shuttles_and_routes": {
             "name": "preprocess_shuttles_and_routes",
             "inputs": [
                 "shuttles",
@@ -22,7 +22,7 @@
                 "preprocessed_routes"
             ]
         },
-        {
+        "preprocess_reviews_and_ratings": {
             "name": "preprocess_reviews_and_ratings",
             "inputs": [
                 "reviews",
@@ -33,7 +33,7 @@
                 "preprocessed_ratings"
             ]
         },
-        {
+        "create_wide_table": {
             "name": "create_wide_table",
             "inputs": [
                 "preprocessed_companies",
@@ -48,7 +48,7 @@
                 "aggregated_data"
             ]
         },
-        {
+        "postprocess_table": {
             "name": "postprocess_table",
             "inputs": [
                 "model_input_table",
@@ -59,7 +59,7 @@
                 "supplementary_data"
             ]
         },
-        {
+        "create_final_table": {
             "name": "create_final_model",
             "inputs": [
                 "final_model",
@@ -72,6 +72,6 @@
                 "business_insights"
             ]
         }
-    ]
+    }
 }
 

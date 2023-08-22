@@ -109,6 +109,9 @@ func linkNode(root *dag.Node, nodes map[string]dag.Node) *dag.Node {
             // is an immediate descendant of root.
             if slices.Contains(node.Inputs, output) {
                 nodePtr := linkNode(&node, nodes)
+                if root.Next == nil {
+                    root.Next = make(map[string]*dag.Node)
+                }
                 root.Next[nodePtr.Name] = nodePtr
             }
         }
@@ -129,10 +132,13 @@ func backlinkNodes(
         }
     }
     // For each node...
-    for name, _ := range nodes {
+    for name, node := range nodes {
         l.Tracef("backlinking node %s", name)
         // If an upstream is provided, then add it to node.Prev
         if upstream != nil {
+            if node.Prev == nil {
+                node.Prev = make(map[string]*dag.Node)
+            }
             nodes[name].Prev[upstream.Name] = upstream
         }
 
