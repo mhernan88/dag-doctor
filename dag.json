@@ -9,6 +9,10 @@
             "outputs": [
                 "preprocessed_companies",
                 "preprocessed_employees"
+            ],
+            "prev": [],
+            "next": [
+                "create_wide_table"
             ]
         },
         "preprocess_shuttles_and_routes": {
@@ -20,6 +24,10 @@
             "outputs": [
                 "preprocessed_shuttles",
                 "preprocessed_routes"
+            ],
+            "prev": [],
+            "next": [
+                "create_wide_table"
             ]
         },
         "preprocess_reviews_and_ratings": {
@@ -31,6 +39,10 @@
             "outputs": [
                 "preprocessed_reviews",
                 "preprocessed_ratings"
+            ],
+            "prev": [],
+            "next": [
+                "create_wide_table"
             ]
         },
         "create_wide_table": {
@@ -46,6 +58,15 @@
             "outputs": [
                 "model_input_table",
                 "aggregated_data"
+            ],
+            "prev": [
+                "preprocess_companies_and_employees",
+                "preprocess_shuttles_and_routes",
+                "preprocess_reviews_and_ratings"
+            ],
+            "next": [
+                "postprocess_table",
+                "create_final_table"
             ]
         },
         "postprocess_table": {
@@ -57,6 +78,12 @@
             "outputs": [
                 "final_model",
                 "supplementary_data"
+            ],
+            "prev": [
+                "create_wide_table"
+            ],
+            "next": [
+                "create_final_table"
             ]
         },
         "create_final_table": {
@@ -70,7 +97,12 @@
                 "reporting_table",
                 "visualization_data",
                 "business_insights"
-            ]
+            ],
+            "prev": [
+                "postprocess_table",
+                "create_wide_table"
+            ],
+            "next": []
         }
     }
 }
