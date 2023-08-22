@@ -88,7 +88,7 @@ func action(c *cli.Context) error {
     if err != nil {
         return err
     }
-    l.Infof("loaded %d root datasets from catalog", len(catalog))
+    l.Infof("loaded %d datasets from catalog", len(catalog))
     if len(catalog) == 0 {
         return fmt.Errorf("failed to load catalog")
     }
@@ -99,7 +99,7 @@ func action(c *cli.Context) error {
     if err != nil {
         return err
     }
-    l.Infof("loaded %d nodes from dag", len(dag))
+    l.Infof("loaded %d root nodes from dag", len(dag))
     if len(dag) == 0 {
         return fmt.Errorf("failed to load dag")
     }
