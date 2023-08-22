@@ -5,6 +5,7 @@ import(
     "slices"
     "github.com/sirupsen/logrus"
     "github.com/mhernan88/dag-bisect/data"
+    "github.com/mhernan88/dag-bisect/utils"
     mapset "github.com/deckarep/golang-set/v2"
 )
 
@@ -166,6 +167,8 @@ func (p DefaultPruner) PruneBefore(
 
     p.unlinkNext(rootsMap, pruneableNodes)
     p.unlinkPrev(rootsMap, pruneableNodes)
+
+    p.l.Tracef("pruned %v", pruneableNodes)
     return pruneableNodes, nil
 }
 
@@ -177,6 +180,23 @@ func (p DefaultPruner) PruneAfter(
     if err != nil {
         return nil, err
     }
+
+    descendantsBefore := utils.FlattenAllNodes(source.Next)
+    p.l.Tracef(
+        "before pruning '%s' had %d descendants",
+        source.Name, 
+        len(descendantsBefore) + len(source.Next),
+    )
+
     source.Next = nil
+    
+    descendantsAfter := utils.FlattenAllNodes(source.Next)
+    p.l.Tracef(
+        "after pruning '%s' had %d descendants",
+        source.Name,
+        len(descendantsAfter) + len(source.Next),
+    )
+
+    p.l.Tracef("pruned %v", pruneableNodes)
     return pruneableNodes, nil
 }

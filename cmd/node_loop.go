@@ -6,14 +6,14 @@ import (
     "github.com/enescakir/emoji"
 )
 
-func (ui *UI) CheckNode(node *data.Node) error {
+func (ui *UI) CheckNode(node *data.Node) (bool, []string, error) {
     fmt.Printf("inspecting node: %s\n", node.Name)
     allDatasetsOK := true
 
     for _, output := range node.Outputs {
         ok, err := ui.CheckDataset(output)
         if err != nil {
-            return err
+            return false, nil, err
         }
         if !ok {
             allDatasetsOK = false
@@ -30,17 +30,18 @@ func (ui *UI) CheckNode(node *data.Node) error {
     if allDatasetsOK {
         prunedNodes, err = ui.pruner.PruneBefore(node, nodeList)
         if err != nil {
-            return err
+            return allDatasetsOK, nil, err
         }
         fmt.Printf("%v node %s cleared OK\n", emoji.CheckMarkButton, node.Name)
         fmt.Printf("|---> pruned nodes: %v\n", prunedNodes)
+        return true, prunedNodes, nil
     } else {
         prunedNodes, err := ui.pruner.PruneAfter(node, nodeList)
         if err != nil {
-            return err
+            return allDatasetsOK, nil, err
         }
         fmt.Printf("%v node %s has ERR\n", emoji.CrossMarkButton, node.Name)
         fmt.Printf("|---> pruned nodes: %v\n", prunedNodes)
+        return false, prunedNodes, nil
     }
-    return nil
 }
