@@ -1,5 +1,5 @@
 {
-    "catalog": {
+    "datasets": {
         "companies": {
             "filename": "companies.csv"
         },
