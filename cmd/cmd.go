@@ -12,6 +12,7 @@ func NewUI(
     catalog map[string]data.Dataset,
     splitter splitters.Splitter,
     pruner pruners.Pruner,
+    iterationLimit int,
     l *logrus.Logger,
 ) UI {
     return UI{
@@ -21,6 +22,7 @@ func NewUI(
         catalog: catalog,
         splitter: splitter,
         pruner: pruner,
+        iterationLimit: iterationLimit,
         l: l,
     }
 }
@@ -32,10 +34,16 @@ type UI struct {
     catalog map[string]data.Dataset
     splitter splitters.Splitter
     pruner pruners.Pruner
+    iterationLimit int
     l *logrus.Logger
 }
 
-func (ui UI) Run() {
+func (ui *UI) Run() error {
     ui.l.Debug("running ui loop")
+    err := ui.CheckDAG()
+    if err != nil {
+        return err
+    }
     ui.l.Debug("terminating ui")
+    return nil
 }
