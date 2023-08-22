@@ -88,6 +88,10 @@ func action(c *cli.Context) error {
     if err != nil {
         return err
     }
+    l.Infof("loaded %d root datasets from catalog", len(catalog))
+    if len(catalog) == 0 {
+        return fmt.Errorf("failed to load catalog")
+    }
     l.Tracef("catalog: %v", catalog)
 
     l.Debug("loading dag")
@@ -95,12 +99,14 @@ func action(c *cli.Context) error {
     if err != nil {
         return err
     }
+    l.Infof("loaded %d nodes from dag", len(dag))
+    if len(dag) == 0 {
+        return fmt.Errorf("failed to load dag")
+    }
     l.Tracef("dag: %v", dag)
 
-    ui := cmd.NewUI(dag, catalog, splitter, pruner, l)
-    ui.Run()
-
-    return nil
+    ui := cmd.NewUI(dag, catalog, splitter, pruner, c.Int("iteration_limit"), l)
+    return ui.Run()
 }
 
 func main() {
