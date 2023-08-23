@@ -1,158 +1,124 @@
 package main
 
 import (
-	"fmt"
-	"os"
+    "os"
+    "fmt"
+    "log"
 
-	"github.com/urfave/cli/v2"
+    "github.com/urfave/cli/v2"
     "github.com/sirupsen/logrus"
-    "github.com/mhernan88/dag-bisect/dag"
+    "github.com/mhernan88/dag-bisect/data"
+    "github.com/mhernan88/dag-bisect/splitters"
+    "github.com/mhernan88/dag-bisect/pruners"
+    "github.com/mhernan88/dag-bisect/cmd"
 )
 
-var yesVariants = []rune{'y', 'Y'}
-var noVariants = []rune{'n', 'N'}
+const version = "v0.1.0"
 
 var flags = []cli.Flag{
     &cli.BoolFlag{
-        Name: "verbose",
-        Aliases: []string{"v"},
+        Name: "v",
         Value: false,
+        Usage: "verbose - info level",
+    },
+    &cli.BoolFlag{
+        Name: "vv",
+        Value: false,
+        Usage: "verbose - debug level",
+    },
+    &cli.BoolFlag{
+        Name: "vvv",
+        Value: false,
+        Usage: "verbose - trace level",
     },
     &cli.StringFlag{
-        Name: "pipeline",
-        Aliases: []string{"p"},
+        Name: "dag",
+        Aliases: []string{"d"},
         Value: "dag.json",
+        Usage: "filename of serialized dag",
     },
     &cli.StringFlag{
         Name: "catalog",
         Aliases: []string{"c"},
         Value: "catalog.json",
+        Usage: "filename of serialized catalog",
+    },
+    &cli.IntFlag{
+        Name: "iteration_limit",
+        Value: 99,
+        Usage: "maximum iteration/recursion depth",
     },
 }
 
+func action(c *cli.Context) error {
+    l := logrus.New()
+    l.SetLevel(logrus.WarnLevel)
 
-func main() {
-	app := &cli.App{
-		Name:  "Pipeline Inspector",
-		Usage: "Inspect a data pipeline for errors",
-        Flags: flags,
-		Action: func(c *cli.Context) error {
-            log := logrus.New()
-            if c.Bool("verbose") {
-                log.SetLevel(logrus.TraceLevel)
-            }
+    if c.Bool("v") {
+        l.SetLevel(logrus.InfoLevel)
+        l.Info("logging set to INFO level")
+    } 
 
-            log.Tracef("loading pipeline file %s", c.String("pipeline"))
-            pipeline, err := dag.LoadPipeline(c.String("pipeline"))
-            if err != nil {
-                return err
-            }
+    if c.Bool("vv") {
+        l.SetLevel(logrus.DebugLevel)
+        l.Info("logging set to DEBUG level")
+    }
 
-            if pipeline == nil {
-                return fmt.Errorf("pipeline was nil")
-            }
-            log.Tracef("successfully loaded pipeline file %s", c.String("pipeline"))
+    if c.Bool("vvv") {
+        l.SetLevel(logrus.TraceLevel)
+        l.Info("logging set to TRACE level")
+    } 
 
-            log.Tracef("linking pipeline nodes")
-            err = pipeline.Link()
-            if err != nil {
-                return err
-            }
-            log.Tracef("successfully linked pipeline nodes")
+    fmt.Printf("dag-bisect %s\n", version)
 
-            log.Tracef("loading catalog file %s", c.String("catalog"))
-            catalog, err := dag.LoadCatalog(c.String("catalog"))
-            if err != nil {
-                return err
-            }
-            log.Tracef("successfully loaded catalog file %s", c.String("catalog"))
-            
-            inspector := dag.NewInspector(*catalog, *pipeline, log)
+    l.Debug("initializing splitter")
+    splitter := splitters.NewDefaultSplitter(
+        c.Int("iteration_limit"),
+        l,
+    )
 
-			// Iterate through the inspection process
-            log.Tracef("performing binary error search on pipeline")
-            _, err = inspector.IsPipelineOK()
-            if err != nil {
-                log.Errorf(err.Error())
-            }
-			return nil
-		},
-	}
+    l.Debug("initializing pruner")
+    pruner := pruners.NewDefaultPruner(
+        c.Int("iteration_limit"),
+        l,
+    )
 
-	err := app.Run(os.Args)
-	if err != nil {
-		fmt.Println(err)
-	}
+    l.Debug("loading catalog")
+    catalog, err := data.LoadCatalog(c.String("catalog"))
+    if err != nil {
+        return err
+    }
+    l.Infof("loaded %d datasets from catalog", len(catalog))
+    if len(catalog) == 0 {
+        return fmt.Errorf("failed to load catalog")
+    }
+    l.Tracef("catalog: %v", catalog)
+
+    l.Debug("loading dag")
+    dag, err := data.LoadDAG(c.String("dag"))
+    if err != nil {
+        return err
+    }
+    l.Infof("loaded %d root nodes (+ additional child nodes) from dag", len(dag))
+    if len(dag) == 0 {
+        return fmt.Errorf("failed to load dag")
+    }
+    l.Tracef("dag: %v", dag)
+
+    ui := cmd.NewUI(dag, catalog, splitter, pruner, c.Int("iteration_limit"), l)
+    return ui.Run()
 }
 
-// func inspectPipeline(pipeline *dag.Pipeline, catalog map[string]dag.PipelineFile) ([]string, error) {
-// 	reader := bufio.NewReader(os.Stdin)
-// 	var errorNodes []string
-//
-// 	for !allNodesInspected(pipeline) {
-// 		midpoints := pipeline.FindMidpoint()
-// 		node := midpoints[0] // You might want to handle multiple midpoints here
-//
-// 		// Show filename to inspect
-// 		fmt.Printf("Please inspect the file: %s\n", node.Name)
-//         data, ok := catalog[node.Name]
-//         if !ok {
-//             return nil, nil
-//         }
-//
-//         err := data.LoadAndDisplay(0)
-//         if err != nil {
-//             return nil, nil
-//         }
-//
-// 		// Ask the user if the file looks correct
-// 		for {
-// 			fmt.Println("Does the file look correct? (y/n):")
-// 			input, _, err := reader.ReadRune()
-//             if err != nil {
-//                 return nil, nil
-//             }
-//
-// 			isValid := false
-//             if slices.Contains(yesVariants, input) {
-// 				isValid = true
-// 				pipeline.PruneNodes(false, &node)
-//             } else if slices.Contains(noVariants, input) {
-// 				pipeline.PruneNodes(true, &node)
-// 			} else {
-//                 fmt.Println("Invalid input, please enter one of: 'y', 'n'.")
-// 				continue
-// 			}
-//
-// 			node.IsValid = &isValid
-//
-// 			// Confirm error if all input nodes are correct
-// 			if !isValid && allInputsCorrect(&node) {
-// 				errorNodes = append(errorNodes, node.Name)
-// 			}
-//
-// 			break
-// 		}
-// 	}
-//
-// 	return errorNodes, nil
-// }
-//
-// func allNodesInspected(pipeline *dag.Pipeline) bool {
-// 	for _, node := range pipeline.Nodes {
-// 		if node.IsValid == nil {
-// 			return false
-// 		}
-// 	}
-// 	return true
-// }
-//
-// func allInputsCorrect(node *dag.PipelineNode) bool {
-// 	for _, prevNode := range node.Prev {
-// 		if prevNode.IsValid == nil || *prevNode.IsValid == false {
-// 			return false
-// 		}
-// 	}
-// 	return true
-// }
-//
+func main() {
+    app := &cli.App{
+        Name: "DAG Bisect",
+        Usage: "Recursively bisect a DAG to quickly locate data errors",
+        Flags: flags,
+        Action: action,
+    }
+
+    err := app.Run(os.Args)
+    if err != nil {
+        log.Fatal(err)
+    }
+}

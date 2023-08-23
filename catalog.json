@@ -1,5 +1,5 @@
 {
-    "catalog": {
+    "datasets": {
         "companies": {
             "filename": "companies.csv"
         },
@@ -10,19 +10,19 @@
             "filename": "example/data/preprocessed_companies.csv"
         },
         "preprocessed_employees": {
-            "filename": "preprocessed_employees.csv"
+            "filename": "example/data/preprocessed_employees.csv"
         },
         "shuttles": {
-            "filename": "shuttles.csv"
+            "filename": "example/data/shuttles.csv"
         },
         "routes": {
-            "filename": "routes.csv"
+            "filename": "example/data/routes.csv"
         },
         "preprocessed_shuttles": {
-            "filename": "preprocessed_shuttles.csv"
+            "filename": "example/data/preprocessed_shuttles.csv"
         },
         "preprocessed_routes": {
-            "filename": "preprocessed_routes.csv"
+            "filename": "example/data/preprocessed_routes.csv"
         },
         "reviews": {
             "filename": "reviews.csv"
@@ -31,31 +31,31 @@
             "filename": "ratings.csv"
         },
         "preprocessed_reviews": {
-            "filename": "preprocessed_reviews.csv"
+            "filename": "example/data/preprocessed_reviews.csv"
         },
         "preprocessed_ratings": {
-            "filename": "preprocessed_ratings.csv"
+            "filename": "example/data/preprocessed_ratings.csv"
         },
         "model_input_table": {
-            "filename": "model_input_table.csv"
+            "filename": "example/data/model_input_table.csv"
         },
         "aggregated_data": {
-            "filename": "aggregated_data.csv"
+            "filename": "example/data/aggregated_data.csv"
         },
         "final_model": {
-            "filename": "final_model.csv"
+            "filename": "example/data/final_model.csv"
         },
         "supplementary_data": {
-            "filename": "supplementary_data.csv"
+            "filename": "example/data/supplementary_data.csv"
         },
         "reporting_table": {
-            "filename": "reporting_table.csv"
+            "filename": "example/data/reporting_table.csv"
         },
         "visualization_data": {
-            "filename": "visualization_data.csv"
+            "filename": "example/data/visualization_data.csv"
         },
         "business_insights": {
-            "filename": "business_insights.csv"
+            "filename": "example/data/business_insights.csv"
         }
     }
 }
