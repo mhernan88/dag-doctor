@@ -51,7 +51,8 @@ func (p DefaultPruner) findUpstreamPruneableNodes(
         p.l.Tracef("evaluating node %s", key)
 
         if len(node.Next) == 1 {
-            // If node only proceeds to pruneable node, then remove the entire node.
+            // If node only proceeds to pruneable node,
+            // then remove the entire node.
             for _, parent := range node.Prev {
                 p.l.Tracef("|---> adding parent %s to stack", parent.Name)
                 nodes[parent.Name] = parent
@@ -59,7 +60,17 @@ func (p DefaultPruner) findUpstreamPruneableNodes(
             }
             p.l.Tracef("|---> adding node %s to prunedNodes", node.Name)
             prunedNodes.Add(node.Name)
-        } 
+        } else {
+            // FIXME: If an ancestor has multiple Next nodes,
+            // that does not necessarily mean that it is not pruneable.
+            // Consider the following diamond pattern. All nodes upstream
+            // of E should be pruneable. But, "B" would not be considered
+            // pruneable in the current state.
+            //
+            //       /-->C--\
+            // A-->B<       -->E
+            //      \-->D--/
+        }
 
         i++
         if p.iterationLimit > 0 {
@@ -71,6 +82,8 @@ func (p DefaultPruner) findUpstreamPruneableNodes(
     return prunedNodes.ToSlice(), nil
 }
 
+// Finds all nodes that can be pruned after `source`
+// assuming `source` has an error.
 func (p DefaultPruner) findDownstreamPruneableNodes(
     source *data.Node,
     roots[]*data.Node,
@@ -115,7 +128,8 @@ func (p DefaultPruner) findDownstreamPruneableNodes(
 }
 
 
-// Given a list of targets, unlinkNext removes those from the DAG going forward.
+// Given a list of targets, unlinkNext removes those
+// from the DAG going forward.
 func (p DefaultPruner) unlinkNext(roots map[string]*data.Node, targets []string) {
     for _, root := range roots {
         if len(root.Next) > 0 {
@@ -134,7 +148,8 @@ func (p DefaultPruner) unlinkNext(roots map[string]*data.Node, targets []string)
     }
 }
 
-// Given a list of targets, unlinkPrev removes those from the DAG going backward.
+// Given a list of targets, unlinkPrev removes those
+// from the DAG going backward.
 func (p DefaultPruner) unlinkPrev(roots map[string]*data.Node, targets []string) {
     for _, root := range roots {
         if len(root.Next) > 0 {
