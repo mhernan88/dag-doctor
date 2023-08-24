@@ -21,6 +21,8 @@ type DefaultPruner struct {
     l *logrus.Logger
 }
 
+// Finds all nodes that can be pruned before `source`
+// assuming `source` is error-free.
 func (p DefaultPruner) findUpstreamPruneableNodes(
     source *data.Node,
     roots[]*data.Node,
@@ -181,7 +183,7 @@ func (p DefaultPruner) PruneAfter(
         return nil, err
     }
 
-    descendantsBefore := utils.FlattenAllNodes(source.Next)
+    descendantsBefore := utils.FlattenAllNodeNames(source.Next)
     p.l.Tracef(
         "before pruning '%s' had %d descendants",
         source.Name, 
@@ -190,7 +192,7 @@ func (p DefaultPruner) PruneAfter(
 
     source.Next = nil
     
-    descendantsAfter := utils.FlattenAllNodes(source.Next)
+    descendantsAfter := utils.FlattenAllNodeNames(source.Next)
     p.l.Tracef(
         "after pruning '%s' had %d descendants",
         source.Name,

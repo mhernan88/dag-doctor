@@ -55,8 +55,9 @@ func FlattenLeafNames(nodes []*data.Node) []string {
     return output.ToSlice()
 }
 
-func FlattenAllNodes(nodes map[string]*data.Node) []string {
-    output := mapset.NewSet[string]()
+
+func FlattenAllNodesToMap(nodes map[string]*data.Node) map[string]*data.Node{
+    output := make(map[string]*data.Node)
 
     var nodesSlice []*data.Node
     for _, node := range nodes {
@@ -67,11 +68,32 @@ func FlattenAllNodes(nodes map[string]*data.Node) []string {
     for len(nodesSlice) > 0 {
         node = nodesSlice[len(nodesSlice)-1]
         nodesSlice = nodesSlice[:len(nodesSlice)-1]
-        output.Add(node.Name)
+
+        output[node.Name] = node
 
         for _, child := range(node.Next) {
             nodesSlice = append(nodesSlice, child)
         }
     }
-    return output.ToSlice()
+    return output
+}
+
+func FlattenAllNodesToSlice(nodes map[string]*data.Node) []*data.Node {
+    flattenedMap := FlattenAllNodesToMap(nodes)
+
+    var flattenedSlice []*data.Node
+    for _, node := range flattenedMap {
+        flattenedSlice = append(flattenedSlice, node)
+    }
+    return flattenedSlice
+}
+
+func FlattenAllNodeNames(nodes map[string]*data.Node) []string {
+    flattenedNodes := FlattenAllNodesToMap(nodes)
+
+    var flattenedNames []string
+    for _, node := range flattenedNodes {
+        flattenedNames = append(flattenedNames, node.Name)
+    }
+    return flattenedNames
 }
