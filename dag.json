@@ -12,7 +12,8 @@
             ],
             "prev": [],
             "next": [
-                "create_wide_table"
+                "create_wide_table",
+                "preprocess_shuttles_and_routes"
             ]
         },
         "preprocess_shuttles_and_routes": {
@@ -22,10 +23,11 @@
                 "routes"
             ],
             "outputs": [
+                "preprocessed_companies",
                 "preprocessed_shuttles",
                 "preprocessed_routes"
             ],
-            "prev": [],
+            "prev": ["preprocess_companies_and_employees"],
             "next": [
                 "create_wide_table"
             ]
