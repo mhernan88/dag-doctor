@@ -8,6 +8,25 @@ import (
     "github.com/mhernan88/dag-bisect/utils"
 )
 
+// DAG
+//                       -> prep_shut_and_rout
+//                     /                     \
+// prep_comp_and_emp--<                       \                  ->postprocess_table
+//                     \                       \                /                   \
+//                      -------------------------> wide_table--<                     \
+//                                            /                \                      \
+// prep_rev_and_rat--------------------------/                  ------------------------->create_final_table
+//
+// In pruning ancestors of wide_table, remove:
+// - prep_shut_and_rout
+// - prep_comp_and_emp
+// - prep_rev_and_rat
+//
+// In pruning ancestors of prep_shut_and_rout, remove:
+// - NOTHING
+// |
+// ----> prep_comp_and_emp also feeds into a non-ancestor node.
+
 func TestFindUpstreamPruneableNodes(t *testing.T) {
     l := logrus.New()
     l.SetLevel(logrus.TraceLevel)
@@ -16,13 +35,10 @@ func TestFindUpstreamPruneableNodes(t *testing.T) {
     if err != nil {
         t.Error(err)
     }
-    roots := utils.FlattenAllNodesToSlice(dag)
     nodes := utils.FlattenAllNodesToMap(dag)
 
     p := NewDefaultPruner(99, l)
-    pruneableNodes, err := p.findUpstreamPruneableNodes(
-        nodes["create_wide_table"],
-        roots)
+    _, pruneableNodes, err := p.findUpstreamPruneableNodes(nodes["create_wide_table"])
     if err != nil {
         t.Error(err)
     }

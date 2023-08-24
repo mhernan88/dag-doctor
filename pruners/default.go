@@ -21,66 +21,86 @@ type DefaultPruner struct {
     l *logrus.Logger
 }
 
+// Looks at all upstream nodes of `source` (and `source` too) and removes them from ancestorNames and ancestorsMap.
+// func (p DefaultPruner) killAncestors(source *data.Node, ancestorNames []string, ancestorsMap map[string]*data.Node) ([]string, map[string]*data.Node, error) {
+//     sourceAncestors := []*data.Node{source}
+//
+//     for len(sourceAncestors) > 0 {
+//         node := sourceAncestors[len(sourceAncestors)-1]
+//         sourceAncestors := sourceAncestors[:len(sourceAncestors)-1]
+//
+//         _, ok := ancestorsMap[node.Name] 
+//         if ok {
+//             var newAncestorNames []string
+//             for _, name := range ancestorNames {
+//                 if name != node.Name {
+//                     newAncestorNames = append(newAncestorNames, node.Name)
+//                 }
+//             }
+//             ancestorNames = newAncestornames
+//             delete(ancestorsMap, node.Name)
+//         }
+//
+//         for _, parent := range node.Prev {
+//             sourceAncestors = append(sourceAncestors, parent)
+//         } else {
+//             return nil, nil, fmt.Errorf(
+//                 "in killAncestors(), tried to pull node '%s' from ancestorsMap, but it didn't exist",
+//                 node.Name,
+//             )
+//         }
+//     }
+//
+//     if len(ancestorsMap) != len(ancestorNames) {
+//         return nil, nil, fmt.Errorf(
+//             "in killAncestors(), ancestorNames had different length (%d) than ancestorsMap (%d)",
+//             len(ancestorNames),
+//             len(ancestorsMap),
+//         )
+//     }
+//     return ancestorNames, ancestorsMap, nil
+// }
+
 // Finds all nodes that can be pruned before `source`
 // assuming `source` is error-free.
-func (p DefaultPruner) findUpstreamPruneableNodes(
-    source *data.Node,
-    roots[]*data.Node,
-) ([]string, error) {
+func (p DefaultPruner) findUpstreamPruneableNodes(source *data.Node) (map[string]*data.Node, []string, error) {
     p.l.Tracef("finding pruneable nodes before %s", source.Name)
-    prunedNodes := mapset.NewSet[string]()
     if source.Prev == nil {
-        return prunedNodes.ToSlice(), nil
+        return make(map[string]*data.Node), []string{}, nil
     }
 
-    var keys []string
-    var key string
-    nodes := make(map[string]*data.Node)
-    for k, v := range source.Prev {
-        nodes[k] = v
-        keys = append(keys, k)
-    }
+    var node *data.Node
+    var nodes []*data.Node
 
-    // Traverse Backwards
-    i := 0
-    for len(keys) > 0 {
-        p.l.Tracef("picking from %d keys", len(keys))
-        key = keys[len(keys)-1]
-        keys = keys[:len(keys)-1]
-        node := nodes[key]
-        p.l.Tracef("evaluating node %s", key)
+    // Find All Upstream Nodes - add them to a map.
+    nodes = []*data.Node{source}
+    ancestorsMap := make(map[string]*data.Node)
+    for len(nodes) > 0 {
+        node = nodes[len(nodes)-1]
+        nodes = nodes[:len(nodes)-1]
 
-        if len(node.Next) == 1 {
-            // If node only proceeds to pruneable node,
-            // then remove the entire node.
-            for _, parent := range node.Prev {
-                p.l.Tracef("|---> adding parent %s to stack", parent.Name)
-                nodes[parent.Name] = parent
-                keys = append(keys, parent.Name)
-            }
-            p.l.Tracef("|---> adding node %s to prunedNodes", node.Name)
-            prunedNodes.Add(node.Name)
-        } else {
-            // FIXME: If an ancestor has multiple Next nodes,
-            // that does not necessarily mean that it is not pruneable.
-            // Consider the following diamond pattern. All nodes upstream
-            // of E should be pruneable. But, "B" would not be considered
-            // pruneable in the current state.
-            //
-            //       /-->C--\
-            // A-->B<       -->E
-            //      \-->D--/
+        ancestorsMap[node.Name] = node
+        for _, parent := range node.Prev {
+            nodes = append(nodes, parent)
         }
+    }
 
-        i++
-        if p.iterationLimit > 0 {
-            if i > p.iterationLimit {
-                return nil, fmt.Errorf("reached iteration limit")
+    pruneableAncestorsMap := make(map[string]*data.Node)
+    pruneableAncestorNames := mapset.NewSet[string]()
+    for ancestorName, ancestor := range ancestorsMap {
+        for childName, _ := range ancestor.Next {
+            _, ok := ancestorsMap[childName]
+            if ok {
+                pruneableAncestorsMap[ancestorName] = ancestor
+                pruneableAncestorNames.Add(ancestorName)
             }
         }
     }
-    return prunedNodes.ToSlice(), nil
+
+    // Remaining nodes are ones we can safely prune.
+    return pruneableAncestorsMap, pruneableAncestorNames.ToSlice(), nil
 }
+
 
 // Finds all nodes that can be pruned after `source`
 // assuming `source` has an error.
@@ -172,7 +192,7 @@ func (p DefaultPruner) PruneBefore(
     source *data.Node, 
     roots []*data.Node,
 ) ([]string, error) {
-    pruneableNodes, err := p.findUpstreamPruneableNodes(source, roots)
+    _, pruneableNodes, err := p.findUpstreamPruneableNodes(source)
     if err != nil {
         return nil, err
     }
