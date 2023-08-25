@@ -40,9 +40,10 @@ func GetNodeDescendants(sources []*Node) map[string]*Node {
     }
 
     descendants := make(map[string]*Node)
+
     for len(nodes) > 0 {
         node := nodes[len(nodes)-1]
-        nodes := nodes[:len(nodes)-1]
+        nodes = nodes[:len(nodes)-1]
 
         for childName, child := range node.Next {
             descendants[childName] = child
