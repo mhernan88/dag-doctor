@@ -39,16 +39,45 @@ func TestFindUpstreamPruneableNodes(t *testing.T) {
     nodes := utils.FlattenAllNodesToMap(dag)
 
     p := NewDefaultPruner(99, l)
-    _, pruneableNodes, err := p.findUpstreamPruneableNodes(nodes["create_wide_table"])
-    if err != nil {
-        t.Error(err)
-        return
-    }
+    _, pruneableNodes := p.findUpstreamPruneableNodes(nodes["create_wide_table"])
+    t.Logf("pruneable nodes: %v", pruneableNodes)
 
     expectedPruneableNodes := []string {
         "preprocess_companies_and_employees",
         "preprocess_shuttles_and_routes",
         "preprocess_reviews_and_ratings",
+    }
+
+    for _, expectedPruneableNode := range expectedPruneableNodes {
+        if !slices.Contains(pruneableNodes, expectedPruneableNode) {
+            t.Errorf(
+                "expected node '%s' to be in pruneable nodes (%v)",
+                expectedPruneableNode,
+                pruneableNodes,
+            )
+        }
+    }
+}
+
+func TestFindDownstreamPruneableNodes(t *testing.T) {
+    l := logrus.New()
+    l.SetLevel(logrus.TraceLevel)
+
+    dag, err := data.LoadDAG("../dag.json")
+    if err != nil {
+        t.Error(err)
+        return
+    }
+    nodes := utils.FlattenAllNodesToMap(dag)
+
+    p := NewDefaultPruner(99, l)
+    _, pruneableNodes := p.findDownstreamPruneableNodes(nodes["preprocess_shuttles_and_routes"])
+    t.Logf("pruneable nodes: %v", pruneableNodes)
+
+    expectedPruneableNodes := []string {
+        "create_wide_table",
+        "postprocess_table",
+        "create_final_table",
     }
 
     for _, expectedPruneableNode := range expectedPruneableNodes {
