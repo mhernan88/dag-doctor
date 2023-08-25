@@ -21,46 +21,6 @@ type DefaultPruner struct {
     l *logrus.Logger
 }
 
-// Looks at all upstream nodes of `source` (and `source` too) and removes them from ancestorNames and ancestorsMap.
-// func (p DefaultPruner) killAncestors(source *data.Node, ancestorNames []string, ancestorsMap map[string]*data.Node) ([]string, map[string]*data.Node, error) {
-//     sourceAncestors := []*data.Node{source}
-//
-//     for len(sourceAncestors) > 0 {
-//         node := sourceAncestors[len(sourceAncestors)-1]
-//         sourceAncestors := sourceAncestors[:len(sourceAncestors)-1]
-//
-//         _, ok := ancestorsMap[node.Name] 
-//         if ok {
-//             var newAncestorNames []string
-//             for _, name := range ancestorNames {
-//                 if name != node.Name {
-//                     newAncestorNames = append(newAncestorNames, node.Name)
-//                 }
-//             }
-//             ancestorNames = newAncestornames
-//             delete(ancestorsMap, node.Name)
-//         }
-//
-//         for _, parent := range node.Prev {
-//             sourceAncestors = append(sourceAncestors, parent)
-//         } else {
-//             return nil, nil, fmt.Errorf(
-//                 "in killAncestors(), tried to pull node '%s' from ancestorsMap, but it didn't exist",
-//                 node.Name,
-//             )
-//         }
-//     }
-//
-//     if len(ancestorsMap) != len(ancestorNames) {
-//         return nil, nil, fmt.Errorf(
-//             "in killAncestors(), ancestorNames had different length (%d) than ancestorsMap (%d)",
-//             len(ancestorNames),
-//             len(ancestorsMap),
-//         )
-//     }
-//     return ancestorNames, ancestorsMap, nil
-// }
-
 // Finds all nodes that can be pruned before `source`
 // assuming `source` is error-free.
 func (p DefaultPruner) findUpstreamPruneableNodes(source *data.Node) (map[string]*data.Node, []string, error) {
@@ -69,31 +29,26 @@ func (p DefaultPruner) findUpstreamPruneableNodes(source *data.Node) (map[string
         return make(map[string]*data.Node), []string{}, nil
     }
 
-    var node *data.Node
-    var nodes []*data.Node
-
-    // Find All Upstream Nodes - add them to a map.
-    nodes = []*data.Node{source}
-    ancestorsMap := make(map[string]*data.Node)
-    for len(nodes) > 0 {
-        node = nodes[len(nodes)-1]
-        nodes = nodes[:len(nodes)-1]
-
-        ancestorsMap[node.Name] = node
-        for _, parent := range node.Prev {
-            nodes = append(nodes, parent)
-        }
-    }
+    ancestorsMap := data.GetNodeAncestors([]*data.Node{source})
+    p.l.Tracef("pulling pruneable nodes from %d ancestors", len(ancestorsMap))
 
     pruneableAncestorsMap := make(map[string]*data.Node)
     pruneableAncestorNames := mapset.NewSet[string]()
     for ancestorName, ancestor := range ancestorsMap {
+        isPruneable := true
         for childName, _ := range ancestor.Next {
             _, ok := ancestorsMap[childName]
-            if ok {
-                pruneableAncestorsMap[ancestorName] = ancestor
-                pruneableAncestorNames.Add(ancestorName)
+            if !ok {
+                p.l.Tracef("%s is not pruneable (it is not an ancestor)", ancestorName)
+                isPruneable = false
+                break
             }
+        }
+
+        if !isPruneable {
+            p.l.Tracef("%s is pruneable (it is an ancestor)", ancestorName)
+            pruneableAncestorsMap[ancestorName] = ancestor
+            pruneableAncestorNames.Add(ancestorName)
         }
     }
 
