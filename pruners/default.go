@@ -1,7 +1,6 @@
 package pruners
 
 import(
-    "fmt"
     "slices"
     "github.com/sirupsen/logrus"
     "github.com/mhernan88/dag-bisect/data"
@@ -23,10 +22,10 @@ type DefaultPruner struct {
 
 // Finds all nodes that can be pruned before `source`
 // assuming `source` is error-free.
-func (p DefaultPruner) findUpstreamPruneableNodes(source *data.Node) (map[string]*data.Node, []string, error) {
+func (p DefaultPruner) findUpstreamPruneableNodes(source *data.Node) (map[string]*data.Node, []string) {
     p.l.Tracef("finding pruneable nodes before %s", source.Name)
     if source.Prev == nil {
-        return make(map[string]*data.Node), []string{}, nil
+        return make(map[string]*data.Node), []string{}
     }
 
     ancestorsMap := data.GetNodeAncestors([]*data.Node{source})
@@ -53,7 +52,7 @@ func (p DefaultPruner) findUpstreamPruneableNodes(source *data.Node) (map[string
     }
 
     // Remaining nodes are ones we can safely prune.
-    return pruneableAncestorsMap, pruneableAncestorNames.ToSlice(), nil
+    return pruneableAncestorsMap, pruneableAncestorNames.ToSlice()
 }
 
 
@@ -61,45 +60,17 @@ func (p DefaultPruner) findUpstreamPruneableNodes(source *data.Node) (map[string
 // assuming `source` has an error.
 func (p DefaultPruner) findDownstreamPruneableNodes(
     source *data.Node,
-    roots[]*data.Node,
-) ([]string, error) {
+) (map[string]*data.Node, []string) {
     p.l.Tracef("finding pruneable nodes after %s", source.Name)
-    prunedNodes := mapset.NewSet[string]()
     if source.Next == nil {
-        return prunedNodes.ToSlice(), nil
+        return make(map[string]*data.Node), []string{}
     }
 
-    var keys []string
-    nodes := make(map[string]*data.Node)
-    for k, v := range source.Next {
-        nodes[k] = v
-        keys = append(keys, k)
-        p.l.Tracef("evaluating node %s", k)
-    }
+    pruneableDescendantsMap := data.GetNodeDescendants([]*data.Node{source})
+    p.l.Tracef("pulling pruneable nodes from %d descendants", len(pruneableDescendantsMap))
 
-    // Traverse Forwards 
-    i := 0
-    for len(keys) > 0 {
-        key := keys[len(keys)-1]
-        keys = keys[:len(keys)-1]
-        node := nodes[key]
-
-        for _, child := range node.Next {
-            nodes[child.Name] = child
-            keys = append(keys, child.Name)
-            p.l.Tracef("|---> adding child %s to stack", child.Name)
-        }
-        p.l.Tracef("|---> adding node %s to prunedNodes", node.Name)
-        prunedNodes.Add(node.Name)
-
-        i++
-        if p.iterationLimit > 0 {
-            if i > p.iterationLimit {
-                return nil, fmt.Errorf("reached iteration limit")
-            }
-        }
-    }
-    return prunedNodes.ToSlice(), nil
+    pruneableDescendantNames, _ := data.SliceNodeMap(pruneableDescendantsMap)
+    return pruneableDescendantsMap, pruneableDescendantNames
 }
 
 
@@ -147,11 +118,7 @@ func (p DefaultPruner) PruneBefore(
     source *data.Node, 
     roots []*data.Node,
 ) ([]string, error) {
-    _, pruneableNodes, err := p.findUpstreamPruneableNodes(source)
-    if err != nil {
-        return nil, err
-    }
-
+    _, pruneableNodes := p.findUpstreamPruneableNodes(source)
     rootsMap := make(map[string]*data.Node)
     for _, root := range roots {
         rootsMap[root.Name] = root
@@ -168,11 +135,7 @@ func (p DefaultPruner) PruneAfter(
     source *data.Node, 
     roots []*data.Node,
 ) ([]string, error) {
-    pruneableNodes, err := p.findDownstreamPruneableNodes(source, roots)
-    if err != nil {
-        return nil, err
-    }
-
+    _, pruneableNodes := p.findDownstreamPruneableNodes(source)
     descendantsBefore := utils.FlattenAllNodeNames(source.Next)
     p.l.Tracef(
         "before pruning '%s' had %d descendants",
