@@ -34,6 +34,7 @@ func TestFindUpstreamPruneableNodes(t *testing.T) {
     dag, err := data.LoadDAG("../dag.json")
     if err != nil {
         t.Error(err)
+        return
     }
     nodes := utils.FlattenAllNodesToMap(dag)
 
@@ -41,6 +42,7 @@ func TestFindUpstreamPruneableNodes(t *testing.T) {
     _, pruneableNodes, err := p.findUpstreamPruneableNodes(nodes["create_wide_table"])
     if err != nil {
         t.Error(err)
+        return
     }
 
     expectedPruneableNodes := []string {
