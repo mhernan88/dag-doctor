@@ -17,6 +17,7 @@ func (ui *UI) CheckNode(node *data.Node) (bool, []string, error) {
         }
         if !ok {
             allDatasetsOK = false
+            break
         }
     }
 
