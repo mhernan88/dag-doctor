@@ -66,6 +66,41 @@ func forwardLinkRoot(root *Node, nodes map[string]*Node) (*Node, error) {
     return root, nil
 }
 
+func isAcyclicNode(node *Node) bool {
+    if node == nil {
+        return true
+    }
+
+    if node.State == "visiting" {
+        return false
+    }
+
+    if node.State == "visited" {
+        return true
+    }
+
+    node.State = "visiting"
+
+    for _, nextNode := range node.Next {
+        if !isAcyclicNode(nextNode) {
+            return false
+        }
+    }
+
+    node.State = "visited"
+
+    return true
+}
+
+func isAcyclicGraph(roots map[string]*Node) bool {
+    for _, root := range roots {
+        if !isAcyclicNode(root) {
+            return false
+        }
+    }
+    return true
+}
+
 func forwardLinkDAG(nodes map[string]*Node) (map[string]*Node, error) {
     roots := make(map[string]*Node)
     for name, node := range nodes {
@@ -114,6 +149,7 @@ func LoadDAG(filename string)(map[string]*Node, error) {
     for _, node := range nodes {
         node.Next = make(map[string]*Node)
         node.Prev = make(map[string]*Node)
+        node.State = "unvisited"
     }
 
     var dag map[string]*Node
@@ -146,6 +182,10 @@ func LoadDAG(filename string)(map[string]*Node, error) {
                 len(node.Next),
             )
         }
+    }
+
+    if !isAcyclicGraph(dag) {
+        return nil, fmt.Errorf("nodes are not acyclic")
     }
 
     return dag, nil
