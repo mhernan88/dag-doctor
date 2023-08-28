@@ -100,13 +100,24 @@ func (p DefaultPruner) PruneBefore(
 	roots map[string]*data.Node,
 ) (map[string]*data.Node, []string, error) {
 	p.l.Tracef("pruning nodes before %s", source.Name)
-	_, pruneableNodes := p.findUpstreamPruneableNodes(source)
+	pruneableNodes, pruneableNodeNames := p.findUpstreamPruneableNodes(source)
 
-	p.unlinkNext(roots, pruneableNodes)
-	p.unlinkPrev(roots, pruneableNodes)
+	p.unlinkNext(roots, pruneableNodeNames)
+	p.unlinkPrev(roots, pruneableNodeNames)
+
+	var newRoots map[string]*data.Node
+	for rootName, root := range roots {
+		_, ok := pruneableNodes[rootName]
+		if !ok {
+			// Root was not in pruneableNodes. Retain.
+			newRoots[rootName] = root
+		} else {
+			p.l.Tracef("pruned root node %s", rootName)
+		}
+	}
 
 	// p.l.Tracef("%d possible faulty nodes remaining", len(ancestors))
-	return roots, pruneableNodes, nil
+	return roots, pruneableNodeNames, nil
 }
 
 func (p DefaultPruner) PruneAfter(

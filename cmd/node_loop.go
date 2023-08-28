@@ -30,24 +30,13 @@ func (ui *UI) CheckNode(node *data.Node) (bool, []string, error) {
 		if err != nil {
 			return allDatasetsOK, nil, err
 		}
-
-		if roots != nil {
-			ui.l.Debugf(
-				"updating roots from %d roots to %d roots",
-				len(ui.nodes),
-				len(roots),
-			)
-			ui.nodes = roots
-		} else {
-			ui.l.Debugf("roots remain unchanged")
-		}
-
 		fmt.Printf("|-> %v node %s cleared OK\n", emoji.CheckMarkButton, node.Name)
 		fmt.Printf("|---> pruned nodes: %v\n", prunedNodes)
 		uniquePrunedNodes := data.LoadNodesIntoSet(prunedNodes)
 		allNodes := data.UniqueNodes(roots)
 		remainingNodes := allNodes.Difference(uniquePrunedNodes).ToSlice()
 		fmt.Printf("|---> %d nodes remaining\n", len(remainingNodes))
+		ui.nodes = roots
 		return true, prunedNodes, nil
 	} else {
 		roots, prunedNodes, err = ui.pruner.PruneAfter(node, ui.nodes)
@@ -70,6 +59,7 @@ func (ui *UI) CheckNode(node *data.Node) (bool, []string, error) {
 		allNodes := data.UniqueNodes(roots)
 		remainingNodes := allNodes.Difference(uniquePrunedNodes).ToSlice()
 		fmt.Printf("|---> %d nodes remaining\n", len(remainingNodes))
+		ui.nodes = roots
 		return false, prunedNodes, nil
 	}
 }
