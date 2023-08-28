@@ -56,7 +56,7 @@ func GetNodeDescendants(sources []*Node) (
 
 		for childName, child := range node.Next {
 			descendants[childName] = child
-			if child.Next == nil {
+			if len(child.Next) == 0 {
 				leaves[childName] = child
 			}
 			nodes = append(nodes, child)
@@ -84,7 +84,7 @@ func GetNodeAncestors(sources []*Node) (
 
 		for parentName, parent := range node.Prev {
 			ancestors[parentName] = parent
-			if parent.Prev == nil {
+			if len(parent.Prev) == 0 {
 				roots[parentName] = parent
 			}
 			nodes = append(nodes, parent)
