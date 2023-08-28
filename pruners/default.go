@@ -105,7 +105,7 @@ func (p DefaultPruner) PruneBefore(
 	p.unlinkNext(roots, pruneableNodeNames)
 	p.unlinkPrev(roots, pruneableNodeNames)
 
-	var newRoots map[string]*data.Node
+	newRoots := make(map[string]*data.Node)
 	for rootName, root := range roots {
 		_, ok := pruneableNodes[rootName]
 		if !ok {
