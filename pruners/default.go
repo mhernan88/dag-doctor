@@ -1,6 +1,7 @@
 package pruners
 
 import (
+	"fmt"
 	"slices"
 
 	mapset "github.com/deckarep/golang-set/v2"
@@ -35,7 +36,7 @@ func (p DefaultPruner) findUpstreamPruneableNodes(source *data.Node) (map[string
 	pruneableAncestorNames := mapset.NewSet[string]()
 	for ancestorName, ancestor := range ancestorsMap {
 		isPruneable := true
-		for childName, _ := range ancestor.Next {
+		for childName := range ancestor.Next {
 			_, ok := ancestorsMap[childName]
 			if !ok {
 				p.l.Tracef("%s is not pruneable (it is not an ancestor)", ancestorName)
@@ -61,12 +62,12 @@ func (p DefaultPruner) unlinkNext(roots map[string]*data.Node, targets []string)
 	for _, root := range roots {
 		if len(root.Next) > 0 {
 			p.unlinkNext(root.Next, targets)
-			for childName, _ := range root.Next {
+			for childName := range root.Next {
 				if slices.Contains(targets, childName) {
 					delete(root.Next, childName)
 				}
 			}
-			for parentName, _ := range root.Prev {
+			for parentName := range root.Prev {
 				if slices.Contains(targets, parentName) {
 					delete(root.Prev, parentName)
 				}
@@ -77,23 +78,23 @@ func (p DefaultPruner) unlinkNext(roots map[string]*data.Node, targets []string)
 
 // Given a list of targets, unlinkPrev removes those
 // from the DAG going backward.
-func (p DefaultPruner) unlinkPrev(roots map[string]*data.Node, targets []string) {
-	for _, root := range roots {
-		if len(root.Next) > 0 {
-			p.unlinkPrev(root.Prev, targets)
-			for childName, _ := range root.Next {
-				if slices.Contains(targets, childName) {
-					delete(root.Next, childName)
-				}
-			}
-			for parentName, _ := range root.Prev {
-				if slices.Contains(targets, parentName) {
-					delete(root.Prev, parentName)
-				}
-			}
-		}
-	}
-}
+// func (p DefaultPruner) unlinkPrev(leaves map[string]*data.Node, targets []string) {
+// 	for _, leaf := range leaves {
+// 		if len(leaf.Prev) > 0 {
+// 			p.unlinkPrev(leaf.Prev, targets)
+// 			for childName := range leaf.Next {
+// 				if slices.Contains(targets, childName) {
+// 					delete(leaf.Next, childName)
+// 				}
+// 			}
+// 			for parentName := range leaf.Prev {
+// 				if slices.Contains(targets, parentName) {
+// 					delete(leaf.Prev, parentName)
+// 				}
+// 			}
+// 		}
+// 	}
+// }
 
 func (p DefaultPruner) PruneBefore(
 	source *data.Node,
@@ -102,31 +103,49 @@ func (p DefaultPruner) PruneBefore(
 	p.l.Tracef("pruning nodes before %s", source.Name)
 	pruneableNodes, pruneableNodeNames := p.findUpstreamPruneableNodes(source)
 
+	numNodesBeforePrune := len(data.UniqueNodes(roots).ToSlice())
+
 	p.unlinkNext(roots, pruneableNodeNames)
-	p.unlinkPrev(roots, pruneableNodeNames)
+	// p.unlinkPrev(roots, pruneableNodeNames)
 
 	newRoots := make(map[string]*data.Node)
 	for rootName, root := range roots {
 		_, ok := pruneableNodes[rootName]
 		if !ok {
 			// Root was not in pruneableNodes. Retain.
+			p.l.Tracef("retained root node %s", rootName)
 			newRoots[rootName] = root
 		} else {
+			for childName, child := range root.Next {
+				newRoots[childName] = child
+			}
 			p.l.Tracef("pruned root node %s", rootName)
 		}
 	}
 
+	numNodesAfterPrune := len(data.UniqueNodes(newRoots).ToSlice())
+
+	if numNodesBeforePrune == numNodesAfterPrune {
+		return nil, nil, fmt.Errorf("no nodes were pruned")
+	}
+
+	p.l.Debugf(
+		"num nodes before pruning after %d; num nodes after pruning after %d",
+		numNodesBeforePrune,
+		numNodesAfterPrune,
+	)
+
 	// p.l.Tracef("%d possible faulty nodes remaining", len(ancestors))
-	return roots, pruneableNodeNames, nil
+	return newRoots, pruneableNodeNames, nil
 }
 
 func (p DefaultPruner) PruneAfter(
 	source *data.Node,
 	roots map[string]*data.Node,
-) (map[string]*data.Node, []string, error) {
+) ([]string, error) {
 	p.l.Tracef("pruning nodes after %s", source.Name)
 	if source.Next == nil {
-		return nil, []string{}, nil
+		return []string{}, nil
 	}
 
 	pruneableDescendantsMap, _ := data.GetNodeDescendants([]*data.Node{source})
@@ -136,8 +155,22 @@ func (p DefaultPruner) PruneAfter(
 	// ancestors, roots := data.GetNodeAncestors([]*data.Node{source})
 	// p.l.Tracef("%d possible faulty nodes remaining", len(ancestors))
 
+	numNodesBeforePrune := len(data.UniqueNodes(roots).ToSlice())
+
 	// Fault has to be before this point.
 	source.Next = nil
 
-	return roots, pruneableDescendantNames, nil
+	numNodesAfterPrune := len(data.UniqueNodes(roots).ToSlice())
+
+	if numNodesBeforePrune == numNodesAfterPrune {
+		return nil, fmt.Errorf("no nodes were pruned")
+	}
+
+	p.l.Debugf(
+		"num nodes before pruning after %d; num nodes after pruning after %d",
+		numNodesBeforePrune,
+		numNodesAfterPrune,
+	)
+
+	return pruneableDescendantNames, nil
 }

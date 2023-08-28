@@ -4,10 +4,6 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 )
 
-type Dataset struct {
-	Filename string `json:"filename"`
-}
-
 type Node struct {
 	Name       string           `json:"name"`
 	Inputs     []string         `json:"inputs"`
@@ -106,8 +102,8 @@ func UniqueNodes(roots map[string]*Node) mapset.Set[string] {
 		nodes = nodes[:len(nodes)-1]
 
 		nodeNames.Add(node.Name)
-		for _, parent := range node.Prev {
-			nodes = append(nodes, parent)
+		for _, child := range node.Next {
+			nodes = append(nodes, child)
 		}
 	}
 	return nodeNames

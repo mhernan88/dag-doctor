@@ -29,13 +29,13 @@ func (ui *UI) CheckDAG() error {
 			dagOK = false
 		}
 
-		if !dagOK && (node.Next == nil) {
-			fmt.Printf(
-				"%v source of error: '%s'\n",
-				emoji.Skull,
-				node.Name,
-			)
-		}
+		// if !dagOK && (len(node.Next) == 0) {
+		// 	fmt.Printf(
+		// 		"%v source of error: '%s'\n",
+		// 		emoji.Skull,
+		// 		node.Name,
+		// 	)
+		// }
 
 		if len(prunedNodes) == 0 {
 			if dagOK {

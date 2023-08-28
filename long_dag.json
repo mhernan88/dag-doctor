@@ -1,0 +1,173 @@
+{
+    "nodes": {
+        "raw_supplier_data": {
+            "name": "raw_supplier_data",
+            "inputs": [],
+            "outputs": ["supplier_data"],
+            "prev": [],
+            "next": ["clean_supplier_data"]
+        },
+        "clean_supplier_data": {
+            "name": "clean_supplier_data",
+            "inputs": ["supplier_data"],
+            "outputs": ["cleaned_supplier_data"],
+            "prev": ["raw_supplier_data"],
+            "next": ["merge_ingredient_data"]
+        },
+        "raw_ingredient_prices": {
+            "name": "raw_ingredient_prices",
+            "inputs": [],
+            "outputs": ["ingredient_prices"],
+            "prev": [],
+            "next": ["clean_ingredient_prices"]
+        },
+        "clean_ingredient_prices": {
+            "name": "clean_ingredient_prices",
+            "inputs": ["ingredient_prices"],
+            "outputs": ["cleaned_ingredient_prices"],
+            "prev": ["raw_ingredient_prices"],
+            "next": ["merge_ingredient_data"]
+        },
+        "merge_ingredient_data": {
+            "name": "merge_ingredient_data",
+            "inputs": ["cleaned_supplier_data", "cleaned_ingredient_prices"],
+            "outputs": ["merged_ingredient_data"],
+            "prev": ["clean_supplier_data", "clean_ingredient_prices"],
+            "next": ["analyze_ingredient_costs"]
+        },
+        "analyze_ingredient_costs": {
+            "name": "analyze_ingredient_costs",
+            "inputs": ["merged_ingredient_data"],
+            "outputs": ["ingredient_cost_analysis"],
+            "prev": ["merge_ingredient_data"],
+            "next": ["optimize_menu_pricing", "visualize_ingredient_costs"]
+        },
+        "raw_sales_data": {
+            "name": "raw_sales_data",
+            "inputs": [],
+            "outputs": ["sales_data"],
+            "prev": [],
+            "next": ["clean_sales_data"]
+        },
+        "clean_sales_data": {
+            "name": "clean_sales_data",
+            "inputs": ["sales_data"],
+            "outputs": ["cleaned_sales_data"],
+            "prev": ["raw_sales_data"],
+            "next": ["sales_analysis"]
+        },
+        "sales_analysis": {
+            "name": "sales_analysis",
+            "inputs": ["cleaned_sales_data"],
+            "outputs": ["sales_analysis_report"],
+            "prev": ["clean_sales_data"],
+            "next": ["optimize_menu_pricing", "visualize_sales_data"]
+        },
+        "customer_feedback": {
+            "name": "customer_feedback",
+            "inputs": [],
+            "outputs": ["feedback_data"],
+            "prev": [],
+            "next": ["feedback_analysis"]
+        },
+        "feedback_analysis": {
+            "name": "feedback_analysis",
+            "inputs": ["feedback_data"],
+            "outputs": ["feedback_insights"],
+            "prev": ["customer_feedback"],
+            "next": ["optimize_menu_pricing", "visualize_feedback"]
+        },
+        "optimize_menu_pricing": {
+            "name": "optimize_menu_pricing",
+            "inputs": ["ingredient_cost_analysis", "sales_analysis_report", "feedback_insights"],
+            "outputs": ["optimized_menu"],
+            "prev": ["analyze_ingredient_costs", "sales_analysis", "feedback_analysis"],
+            "next": ["visualize_optimized_menu"]
+        },
+        "visualize_ingredient_costs": {
+            "name": "visualize_ingredient_costs",
+            "inputs": ["ingredient_cost_analysis"],
+            "outputs": ["ingredient_cost_visuals"],
+            "prev": ["analyze_ingredient_costs"],
+            "next": []
+        },
+        "visualize_sales_data": {
+            "name": "visualize_sales_data",
+            "inputs": ["sales_analysis_report"],
+            "outputs": ["sales_visuals"],
+            "prev": ["sales_analysis"],
+            "next": []
+        },
+        "visualize_feedback": {
+            "name": "visualize_feedback",
+            "inputs": ["feedback_insights"],
+            "outputs": ["feedback_visuals"],
+            "prev": ["feedback_analysis"],
+            "next": []
+        },
+        "visualize_optimized_menu": {
+            "name": "visualize_optimized_menu",
+            "inputs": ["optimized_menu"],
+            "outputs": ["menu_visuals"],
+            "prev": ["optimize_menu_pricing"],
+            "next": []
+        },
+        "raw_employee_data": {
+            "name": "raw_employee_data",
+            "inputs": [],
+            "outputs": ["employee_data"],
+            "prev": [],
+            "next": ["clean_employee_data"]
+        },
+        "clean_employee_data": {
+            "name": "clean_employee_data",
+            "inputs": ["employee_data"],
+            "outputs": ["cleaned_employee_data"],
+            "prev": ["raw_employee_data"],
+            "next": ["employee_performance_analysis"]
+        },
+        "employee_performance_analysis": {
+            "name": "employee_performance_analysis",
+            "inputs": ["cleaned_employee_data", "cleaned_sales_data"],
+            "outputs": ["employee_performance_report"],
+            "prev": ["clean_employee_data", "clean_sales_data"],
+            "next": ["visualize_employee_performance"]
+        },
+        "visualize_employee_performance": {
+            "name": "visualize_employee_performance",
+            "inputs": ["employee_performance_report"],
+            "outputs": ["employee_performance_visuals"],
+            "prev": ["employee_performance_analysis"],
+            "next": []
+        },
+        "raw_inventory_data": {
+            "name": "raw_inventory_data",
+            "inputs": [],
+            "outputs": ["inventory_data"],
+            "prev": [],
+            "next": ["clean_inventory_data"]
+        },
+        "clean_inventory_data": {
+            "name": "clean_inventory_data",
+            "inputs": ["inventory_data"],
+            "outputs": ["cleaned_inventory_data"],
+            "prev": ["raw_inventory_data"],
+            "next": ["inventory_analysis"]
+        },
+        "inventory_analysis": {
+            "name": "inventory_analysis",
+            "inputs": ["cleaned_inventory_data", "merged_ingredient_data"],
+            "outputs": ["inventory_report"],
+            "prev": ["clean_inventory_data", "merge_ingredient_data"],
+            "next": ["visualize_inventory_status"]
+        },
+        "visualize_inventory_status": {
+            "name": "visualize_inventory_status",
+            "inputs": ["inventory_report"],
+            "outputs": ["inventory_visuals"],
+            "prev": ["inventory_analysis"],
+            "next": []
+        }
+    }
+}
+

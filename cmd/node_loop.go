@@ -9,6 +9,12 @@ import (
 
 func (ui *UI) CheckNode(node *data.Node) (bool, []string, error) {
 	fmt.Printf("|-> %v inspecting node: %s\n", emoji.Microscope, node.Name)
+	ancestors, _ := data.GetNodeAncestors([]*data.Node{node})
+	descendants, _ := data.GetNodeDescendants([]*data.Node{node})
+	ui.l.Debugf(
+		"%d nodes before, %d nodes after",
+		len(ancestors), len(descendants),
+	)
 	allDatasetsOK := true
 
 	for _, output := range node.Outputs {

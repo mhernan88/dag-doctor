@@ -43,3 +43,18 @@ func TestGetNodeAncestors(t *testing.T) {
 		t.Errorf("leaves: expected %d, got %d", 0, len(roots))
 	}
 }
+
+func TestUniqueNodes(t *testing.T) {
+	l := logrus.New()
+	l.SetLevel(logrus.TraceLevel)
+	dag, err := LoadDAG("../dag.json")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	uniqueNodes := UniqueNodes(dag).ToSlice()
+	if len(uniqueNodes) != 6 {
+		t.Errorf("uniqueNodes: expected %d, got %d", 6, len(uniqueNodes))
+	}
+}
