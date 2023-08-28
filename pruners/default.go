@@ -142,10 +142,10 @@ func (p DefaultPruner) PruneBefore(
 func (p DefaultPruner) PruneAfter(
 	source *data.Node,
 	roots map[string]*data.Node,
-) ([]string, error) {
+) (map[string]*data.Node, []string, error) {
 	p.l.Tracef("pruning nodes after %s", source.Name)
 	if source.Next == nil {
-		return []string{}, nil
+		return roots, []string{}, nil
 	}
 
 	pruneableDescendantsMap, _ := data.GetNodeDescendants([]*data.Node{source})
@@ -163,7 +163,7 @@ func (p DefaultPruner) PruneAfter(
 	numNodesAfterPrune := len(data.UniqueNodes(roots).ToSlice())
 
 	if numNodesBeforePrune == numNodesAfterPrune {
-		return nil, fmt.Errorf("no nodes were pruned")
+		return nil, nil, fmt.Errorf("no nodes were pruned")
 	}
 
 	p.l.Debugf(
@@ -172,5 +172,5 @@ func (p DefaultPruner) PruneAfter(
 		numNodesAfterPrune,
 	)
 
-	return pruneableDescendantNames, nil
+	return roots, pruneableDescendantNames, nil
 }
