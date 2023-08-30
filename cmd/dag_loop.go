@@ -11,8 +11,8 @@ func (ui *UI) CheckDAG() error {
 
 	dagOK := true
 
-	for len(ui.nodes) > 0 {
-		node, err := ui.splitter.FindCandidate(ui.nodes)
+	for len(ui.dag.Nodes) > 0 {
+		node, err := ui.splitter.FindCandidate(ui.dag.Nodes)
 		if err != nil {
 			return err
 		}

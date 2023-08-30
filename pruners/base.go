@@ -5,6 +5,6 @@ import (
 )
 
 type Pruner interface {
-	PruneBefore(source *data.Node, roots map[string]*data.Node) (map[string]*data.Node, []string, error)
-	PruneAfter(source *data.Node, roots map[string]*data.Node) (map[string]*data.Node, []string, error)
+	PruneBefore(node string, dag data.DAG) data.DAG
+	PruneAfter(node string, dag data.DAG) data.DAG
 }

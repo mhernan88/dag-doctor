@@ -8,16 +8,16 @@ import (
 )
 
 func NewUI(
-	nodes map[string]*data.Node,
+	dag data.DAG,
 	splitter splitters.Splitter,
 	pruner pruners.Pruner,
 	iterationLimit int,
 	l *logrus.Logger,
 ) UI {
 	return UI{
-		nodes:          nodes,
-		okNodes:        make(map[string]*data.Node),
-		errNodes:       make(map[string]*data.Node),
+		dag:            dag,
+		okNodes:        make(map[string]data.Node),
+		errNodes:       make(map[string]data.Node),
 		splitter:       splitter,
 		pruner:         pruner,
 		iterationLimit: iterationLimit,
@@ -26,9 +26,9 @@ func NewUI(
 }
 
 type UI struct {
-	nodes          map[string]*data.Node
-	okNodes        map[string]*data.Node
-	errNodes       map[string]*data.Node
+	dag            data.DAG
+	okNodes        map[string]data.Node
+	errNodes       map[string]data.Node
 	splitter       splitters.Splitter
 	pruner         pruners.Pruner
 	iterationLimit int

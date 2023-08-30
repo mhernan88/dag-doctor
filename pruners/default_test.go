@@ -142,7 +142,7 @@ func TestPruneAfter(t *testing.T) {
 		return
 	}
 
-	_, err = p.PruneAfter(nodes["create_wide_table"], dag)
+	_, _, err = p.PruneAfter(nodes["create_wide_table"], dag)
 	if err != nil {
 		t.Error(err)
 		return
