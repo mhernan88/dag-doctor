@@ -28,11 +28,11 @@ func (ui *UI) CheckNode(node data.Node) (bool, []string, error) {
 		fmt.Printf("|-> %v node %s cleared OK\n", emoji.CheckMarkButton, node.Name)
 		// TODO: Add pruned nodes to other list.
 		// fmt.Printf("|---> pruned nodes: %v\n", prunedNodes)
-		return true, prunedNodes, nil
+		return true, nil, nil
 	} else {
 		ui.dag = ui.pruner.PruneAfter(node.Name, ui.dag)
 		fmt.Printf("|-> %v node %s has ERR\n", emoji.CrossMarkButton, node.Name)
 		fmt.Printf("|---> pruned nodes: %v\n", prunedNodes)
-		return false, prunedNodes, nil
+		return false, nil, nil
 	}
 }

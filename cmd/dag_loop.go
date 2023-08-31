@@ -7,7 +7,7 @@ import (
 	"github.com/mhernan88/dag-bisect/data"
 )
 
-func (ui *UI) terminate(ok bool, node *data.Node) {
+func (ui *UI) terminate(ok bool, nodeName string) {
 	if ok {
 		fmt.Printf(
 			"%v dag ok\n",
@@ -17,7 +17,7 @@ func (ui *UI) terminate(ok bool, node *data.Node) {
 		fmt.Printf(
 			"%v source of error: '%s'\n",
 			emoji.Skull,
-			node.Name,
+			nodeName,
 		)
 	}
 }
@@ -26,21 +26,24 @@ func (ui *UI) CheckDAG() error {
 	fmt.Println("inspecting DAG")
 
 	dagOK := true
-	var node *data.Node
+	var nodePtr *data.Node
+	var node data.Node
+	var err error
 
-	for len(ui.dag.Nodes) > 0 {
-		node, err := ui.splitter.FindCandidate(ui.dag)
+	for (len(ui.dag.Nodes) > 0) && (len(ui.dag.Roots) > 0) {
+		nodePtr, err = ui.splitter.FindCandidate(ui.dag)
 		if err != nil {
 			return err
 		}
 
-		if node == nil {
+		if nodePtr == nil {
 			return fmt.Errorf("failed to find split candidate")
 		}
+		node = *nodePtr
 
 		ui.l.Tracef("selected split candidate: %s", node.Name)
 
-		ok, _, err := ui.CheckNode(*node)
+		ok, _, err := ui.CheckNode(node)
 		// ui.l.Tracef("prunedNodes = %v", prunedNodes)
 		if err != nil {
 			return err
@@ -49,32 +52,7 @@ func (ui *UI) CheckDAG() error {
 		if !ok {
 			dagOK = false
 		}
-
-		// if !dagOK && (len(node.Next) == 0) {
-		// 	fmt.Printf(
-		// 		"%v source of error: '%s'\n",
-		// 		emoji.Skull,
-		// 		node.Name,
-		// 	)
-		// }
-
-		// if len(prunedNodes) == 0 {
-		// 	if dagOK {
-		// 		fmt.Printf(
-		// 			"%v dag ok\n",
-		// 			emoji.GrinningFace,
-		// 		)
-		// 		return nil
-		// 	} else {
-		// 		fmt.Printf(
-		// 			"%v source of error: '%s'\n",
-		// 			emoji.Skull,
-		// 			node.Name,
-		// 		)
-		// 		return nil
-		// 	}
-		// }
 	}
-	ui.terminate(dagOK, node)
+	ui.terminate(dagOK, node.Name)
 	return nil
 }
