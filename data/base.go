@@ -139,7 +139,6 @@ func (d *DAG) Ancestors(node string) map[string]Node {
 	for len(nodes) > 0 {
 		node := nodes[len(nodes)-1]
 		nodes = nodes[:len(nodes)-1]
-
 		for _, parent := range node.Prev {
 			ancestors[parent] = d.Nodes[parent]
 			nodes = append(nodes, d.Nodes[parent])
@@ -148,13 +147,12 @@ func (d *DAG) Ancestors(node string) map[string]Node {
 	return ancestors
 }
 
-func (d *DAG) Descendants(node string) map[string]Node {
-	nodes := []Node{d.Nodes[node]}
+func (d *DAG) Descendants(start string) map[string]Node {
+	nodes := []Node{d.Nodes[start]}
 	descendants := make(map[string]Node)
 	for len(nodes) > 0 {
 		node := nodes[len(nodes)-1]
 		nodes = nodes[:len(nodes)-1]
-
 		for _, child := range node.Next {
 			descendants[child] = d.Nodes[child]
 			nodes = append(nodes, d.Nodes[child])
