@@ -4,12 +4,29 @@ import (
 	"fmt"
 
 	"github.com/enescakir/emoji"
+	"github.com/mhernan88/dag-bisect/data"
 )
+
+func (ui *UI) terminate(ok bool, node *data.Node) {
+	if ok {
+		fmt.Printf(
+			"%v dag ok\n",
+			emoji.GrinningFace,
+		)
+	} else {
+		fmt.Printf(
+			"%v source of error: '%s'\n",
+			emoji.Skull,
+			node.Name,
+		)
+	}
+}
 
 func (ui *UI) CheckDAG() error {
 	fmt.Println("inspecting DAG")
 
 	dagOK := true
+	var node *data.Node
 
 	for len(ui.dag.Nodes) > 0 {
 		node, err := ui.splitter.FindCandidate(ui.dag)
@@ -23,8 +40,8 @@ func (ui *UI) CheckDAG() error {
 
 		ui.l.Tracef("selected split candidate: %s", node.Name)
 
-		ok, prunedNodes, err := ui.CheckNode(*node)
-		ui.l.Tracef("prunedNodes = %v", prunedNodes)
+		ok, _, err := ui.CheckNode(*node)
+		// ui.l.Tracef("prunedNodes = %v", prunedNodes)
 		if err != nil {
 			return err
 		}
@@ -41,22 +58,23 @@ func (ui *UI) CheckDAG() error {
 		// 	)
 		// }
 
-		if len(prunedNodes) == 0 {
-			if dagOK {
-				fmt.Printf(
-					"%v dag ok\n",
-					emoji.GrinningFace,
-				)
-				return nil
-			} else {
-				fmt.Printf(
-					"%v source of error: '%s'\n",
-					emoji.Skull,
-					node.Name,
-				)
-				return nil
-			}
-		}
+		// if len(prunedNodes) == 0 {
+		// 	if dagOK {
+		// 		fmt.Printf(
+		// 			"%v dag ok\n",
+		// 			emoji.GrinningFace,
+		// 		)
+		// 		return nil
+		// 	} else {
+		// 		fmt.Printf(
+		// 			"%v source of error: '%s'\n",
+		// 			emoji.Skull,
+		// 			node.Name,
+		// 		)
+		// 		return nil
+		// 	}
+		// }
 	}
+	ui.terminate(dagOK, node)
 	return nil
 }

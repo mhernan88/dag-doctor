@@ -57,6 +57,13 @@ func (p DefaultPruner) PruneBefore(
 	dag data.DAG,
 ) data.DAG {
 	p.l.Tracef("pruning nodes before %s", node)
+	if len(dag.Nodes[node].Prev) == 0 {
+		p.l.Debugf("node %s had no parents to prune", node)
+		dag.Pop(node)
+		dag.Reconcile()
+		return dag
+	}
+
 	pruneableNodes := p.findUpstreamPruneableNodes(node, dag)
 	for rootName := range dag.Roots {
 		_, ok := pruneableNodes[rootName]
@@ -89,6 +96,9 @@ func (p DefaultPruner) PruneBefore(
 		}
 		node.Prev = newPrev
 	}
+
+	dag.Pop(node)
+	dag.Reconcile()
 	return dag
 }
 
@@ -98,6 +108,9 @@ func (p DefaultPruner) PruneAfter(
 ) data.DAG {
 	p.l.Tracef("pruning nodes after %s", node)
 	if len(dag.Nodes[node].Next) == 0 {
+		p.l.Debugf("node %s had no children to prune", node)
+		dag.Pop(node)
+		dag.Reconcile()
 		return dag
 	}
 
@@ -114,7 +127,8 @@ func (p DefaultPruner) PruneAfter(
 	newNode := dag.Nodes[node]
 	newNode.Next = []string{}
 	dag.Nodes[node] = newNode
-	dag.Reconcile()
 
+	dag.Pop(node)
+	dag.Reconcile()
 	return dag
 }

@@ -41,8 +41,6 @@ func (s DefaultSplitter) FindCandidate(dag data.DAG) (*data.Node, error) {
 	var ok bool
 
 	for len(keys) > 0 {
-		fmt.Printf("len(keys)=%d\n", len(keys))
-		fmt.Println(keys)
 		key = keys[len(keys)-1]
 		keys = keys[:len(keys)-1]
 		nd, ok = dag.Nodes[key]
