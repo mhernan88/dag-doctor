@@ -17,6 +17,10 @@ func (ui *UI) CheckDAG() error {
 			return err
 		}
 
+		if node == nil {
+			return fmt.Errorf("failed to find split candidate")
+		}
+
 		ui.l.Tracef("selected split candidate: %s", node.Name)
 
 		ok, prunedNodes, err := ui.CheckNode(*node)

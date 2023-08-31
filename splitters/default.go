@@ -27,18 +27,34 @@ func (s DefaultSplitter) FindCandidate(dag data.DAG) (*data.Node, error) {
 	var key string
 	var keys []string
 	for key = range dag.Roots {
+		if key == "" {
+			return nil, fmt.Errorf("dag contained blank key")
+		}
 		keys = append(keys, key)
 	}
 
 	if len(keys) == 0 {
-		return nil, fmt.Errorf("failed to find dag keys")
+		return nil, fmt.Errorf("dag contained no keys")
 	}
 
 	var nd data.Node
+	var ok bool
+
 	for len(keys) > 0 {
+		fmt.Printf("len(keys)=%d\n", len(keys))
+		fmt.Println(keys)
 		key = keys[len(keys)-1]
 		keys = keys[:len(keys)-1]
-		nd = dag.Roots[key]
+		nd, ok = dag.Nodes[key]
+
+		if key == "" {
+			return nil, fmt.Errorf("found empty key in map")
+		}
+
+		if !ok {
+			return nil, fmt.Errorf("failed to pull node %s from map", key)
+		}
+
 		s.l.Tracef("popped node %s from queue", nd.Name)
 
 		numAncestors := len(dag.Ancestors(key))
@@ -57,6 +73,20 @@ func (s DefaultSplitter) FindCandidate(dag data.DAG) (*data.Node, error) {
 
 		for _, child := range nd.Next {
 			s.l.Tracef("adding node %s child (%s) to stack", nd.Name, child)
+			if child == "" {
+				return nil, fmt.Errorf(
+					"node '%s' child had corrupt name",
+					nd.Name,
+				)
+			}
+
+			if dag.Nodes[child].Name == "" {
+				return nil, fmt.Errorf(
+					"node '%s' child obj had corrupt name (key=%s)",
+					nd.Name,
+					child,
+				)
+			}
 			keys = append(keys, dag.Nodes[child].Name)
 		}
 	}

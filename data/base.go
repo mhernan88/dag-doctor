@@ -15,11 +15,18 @@ func NewDAGFromSlice(nodes []Node) (*DAG, error) {
 }
 
 func NewDAGFromMap(nodes map[string]Node) (*DAG, error) {
+	if len(nodes) == 0 {
+		return nil, fmt.Errorf("dag constructor received no nodes")
+	}
 	roots := make(map[string]Node)
 	for key, node := range nodes {
-		if len(node.Inputs) == 0 {
+		if (len(node.Prev) == 0) || (node.Prev == nil) {
 			roots[key] = node
 		}
+	}
+
+	if len(roots) == 0 {
+		return nil, fmt.Errorf("failed to find dag roots")
 	}
 
 	dag := DAG{

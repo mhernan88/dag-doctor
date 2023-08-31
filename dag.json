@@ -68,14 +68,14 @@
             ],
             "next": [
                 "postprocess_table",
-                "create_final_table"
+                "create_final_model"
             ]
         },
         "postprocess_table": {
             "name": "postprocess_table",
             "inputs": [
                 "model_input_table",
-                "external_data_source"
+                "external_data_model"
             ],
             "outputs": [
                 "final_model",
@@ -85,10 +85,10 @@
                 "create_wide_table"
             ],
             "next": [
-                "create_final_table"
+                "create_final_model"
             ]
         },
-        "create_final_table": {
+        "create_final_model": {
             "name": "create_final_model",
             "inputs": [
                 "final_model",
