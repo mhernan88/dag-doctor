@@ -12,14 +12,14 @@ func (ui *UI) CheckDAG() error {
 	dagOK := true
 
 	for len(ui.dag.Nodes) > 0 {
-		node, err := ui.splitter.FindCandidate(ui.dag.Nodes)
+		node, err := ui.splitter.FindCandidate(ui.dag)
 		if err != nil {
 			return err
 		}
 
 		ui.l.Tracef("selected split candidate: %s", node.Name)
 
-		ok, prunedNodes, err := ui.CheckNode(node)
+		ok, prunedNodes, err := ui.CheckNode(*node)
 		ui.l.Tracef("prunedNodes = %v", prunedNodes)
 		if err != nil {
 			return err

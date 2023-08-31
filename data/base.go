@@ -2,6 +2,8 @@ package data
 
 import (
 	"fmt"
+
+	mapset "github.com/deckarep/golang-set/v2"
 )
 
 func NewDAGFromSlice(nodes []Node) (*DAG, error) {
@@ -51,7 +53,68 @@ func (d *DAG) Pop(name string) {
 	}
 }
 
+// Deletes nodes that do not have corresponding node inputs/outputs.
+func (d *DAG) reconcileNodesWithInputsAndOutputs() {
+	// Find all nodes in inputs/outputs.
+	allNames := mapset.NewSet[string]()
+	for _, node := range d.Nodes {
+		for _, prevNodeName := range node.Prev {
+			allNames.Add(prevNodeName)
+		}
+		for _, nextNodeName := range node.Next {
+			allNames.Add(nextNodeName)
+		}
+	}
+
+	// Find nodes not in inputs/outputs.
+	var nodesToDelete []string
+	for nodeName := range d.Nodes {
+		if !allNames.Contains(nodeName) {
+			nodesToDelete = append(nodesToDelete, nodeName)
+		}
+	}
+
+	// Delete nodes not in inputs/outputs.
+	for _, nodeToDelete := range nodesToDelete {
+		delete(d.Nodes, nodeToDelete)
+	}
+}
+
+// Deletes node inputs/outputs that do not have a corresponding node.
+func (d *DAG) reconcileInputsAndOutputsWithNodes() {
+	// Find all unique node names.
+	allNames := mapset.NewSet[string]()
+	for nodeName, _ := range d.Nodes {
+		allNames.Add(nodeName)
+	}
+
+	// Delete inputs/outputs not in nodes.
+	for nodeName, node := range d.Nodes {
+		var newPrev []string
+		for _, prevName := range node.Prev {
+			if allNames.Contains(prevName) {
+				newPrev = append(newPrev, prevName)
+			}
+		}
+		node.Prev = newPrev
+
+		var newNext []string
+		for _, nextName := range node.Next {
+			if !allNames.Contains(nextName) {
+				newNext = append(newNext, nextName)
+			}
+		}
+		node.Next = newNext
+
+		d.Nodes[nodeName] = node
+	}
+}
+
 func (d *DAG) Reconcile() {
+	d.reconcileNodesWithInputsAndOutputs()
+	d.reconcileInputsAndOutputsWithNodes()
+
+	// Delete any lingering roots.
 	for rootName := range d.Roots {
 		_, ok := d.Nodes[rootName]
 		if !ok {

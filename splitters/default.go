@@ -26,7 +26,7 @@ func (s DefaultSplitter) FindCandidate(dag data.DAG) (*data.Node, error) {
 
 	var key string
 	var keys []string
-	for key, _ = range dag.Roots {
+	for key = range dag.Roots {
 		keys = append(keys, key)
 	}
 

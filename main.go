@@ -85,13 +85,13 @@ func action(c *cli.Context) error {
 	if dag == nil {
 		return fmt.Errorf("dag wil nil")
 	}
-	l.Infof("loaded %d root nodes (+ additional child nodes) from dag", len(dag))
-	if len(dag) == 0 {
+	l.Infof("loaded %d root nodes (+ additional child nodes) from dag", len(dag.Nodes))
+	if len(dag.Nodes) == 0 {
 		return fmt.Errorf("failed to load dag")
 	}
 	l.Tracef("dag: %v", dag)
 
-	ui := cmd.NewUI(dag, splitter, pruner, c.Int("iteration_limit"), l)
+	ui := cmd.NewUI(*dag, splitter, pruner, c.Int("iteration_limit"), l)
 	return ui.Run()
 }
 

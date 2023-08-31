@@ -102,6 +102,15 @@ func (p DefaultPruner) PruneAfter(
 	}
 
 	// Fault has to be before this point.
+	descendants := dag.Descendants(node)
+	for descendantName := range descendants {
+		delete(dag.Nodes, descendantName)
+		_, ok := dag.Roots[descendantName]
+		if !ok {
+			delete(dag.Roots, descendantName)
+		}
+	}
+
 	newNode := dag.Nodes[node]
 	newNode.Next = []string{}
 	dag.Nodes[node] = newNode
