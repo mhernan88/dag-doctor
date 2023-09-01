@@ -55,13 +55,13 @@ func (p DefaultPruner) findUpstreamPruneableNodes(
 func (p DefaultPruner) PruneBefore(
 	node string,
 	dag data.DAG,
-) data.DAG {
+) (data.DAG, map[string]data.Node) {
 	p.l.Tracef("pruning nodes before %s", node)
 	if len(dag.Nodes[node].Prev) == 0 {
 		p.l.Debugf("node %s had no parents to prune", node)
 		dag.Pop(node)
 		dag.Reconcile()
-		return dag
+		return dag, nil
 	}
 
 	pruneableNodes := p.findUpstreamPruneableNodes(node, dag)
@@ -97,26 +97,29 @@ func (p DefaultPruner) PruneBefore(
 		node.Prev = newPrev
 	}
 
+	pruneableNodes[node] = dag.Nodes[node]
 	dag.Pop(node)
 	dag.Reconcile()
-	return dag
+	return dag, pruneableNodes
 }
 
 func (p DefaultPruner) PruneAfter(
 	node string,
 	dag data.DAG,
-) data.DAG {
+) (data.DAG, map[string]data.Node) {
 	p.l.Tracef("pruning nodes after %s", node)
 	if len(dag.Nodes[node].Next) == 0 {
 		p.l.Debugf("node %s had no children to prune", node)
 		dag.Pop(node)
 		dag.Reconcile()
-		return dag
+		return dag, make(map[string]data.Node)
 	}
+	pruneableNodes := make(map[string]data.Node)
 
 	// Fault has to be before this point.
 	descendants := dag.Descendants(node)
-	for descendantName := range descendants {
+	for descendantName, descendant := range descendants {
+		pruneableNodes[descendantName] = descendant
 		delete(dag.Nodes, descendantName)
 		_, ok := dag.Roots[descendantName]
 		if !ok {
@@ -130,5 +133,5 @@ func (p DefaultPruner) PruneAfter(
 
 	dag.Pop(node)
 	dag.Reconcile()
-	return dag
+	return dag, pruneableNodes
 }

@@ -5,5 +5,5 @@ import (
 )
 
 type Splitter interface {
-	FindCandidate(dag data.DAG) (*data.Node, error)
+	FindCandidate(dag data.DAG) (data.Node, error)
 }

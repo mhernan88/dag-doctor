@@ -20,21 +20,24 @@ type DefaultSplitter struct {
 	l              *logrus.Logger
 }
 
-func (s DefaultSplitter) FindCandidate(dag data.DAG) (*data.Node, error) {
-	var candidate *data.Node = nil
+func (s DefaultSplitter) FindCandidate(dag data.DAG) (data.Node, error) {
+	s.l.Debug("selecting best split candidate")
+	s.l.Tracef("options: %v", dag.SliceKeys())
+	var candidate data.Node
+	var candidateFound bool
 	var bestScore = math.Inf(-1)
 
 	var key string
 	var keys []string
 	for key = range dag.Roots {
 		if key == "" {
-			return nil, fmt.Errorf("dag contained blank key")
+			return data.Node{}, fmt.Errorf("dag contained blank key")
 		}
 		keys = append(keys, key)
 	}
 
 	if len(keys) == 0 {
-		return nil, fmt.Errorf("dag contained no keys")
+		return data.Node{}, fmt.Errorf("dag contained no keys")
 	}
 
 	var nd data.Node
@@ -46,11 +49,19 @@ func (s DefaultSplitter) FindCandidate(dag data.DAG) (*data.Node, error) {
 		nd, ok = dag.Nodes[key]
 
 		if key == "" {
-			return nil, fmt.Errorf("found empty key in map")
+			return data.Node{}, fmt.Errorf("found empty key in map")
 		}
 
 		if !ok {
-			return nil, fmt.Errorf("failed to pull node %s from map", key)
+			return data.Node{}, fmt.Errorf("failed to pull node %s from map", key)
+		}
+
+		isReconciled, labelsAndNotNodes, nodesAndNotlabels := dag.IsReconciled()
+		if !isReconciled {
+			return data.Node{}, fmt.Errorf(
+				"dag not reconciled, excess labels = %v, excess nodes = %v",
+				labelsAndNotNodes, nodesAndNotlabels,
+			)
 		}
 
 		s.l.Tracef("popped node %s from queue", nd.Name)
@@ -66,20 +77,21 @@ func (s DefaultSplitter) FindCandidate(dag data.DAG) (*data.Node, error) {
 		s.l.Tracef("node '%s' has split score: %f", key, score)
 		if score > bestScore {
 			bestScore = score
-			candidate = &nd
+			candidate = nd
+			candidateFound = true
 		}
 
 		for _, child := range nd.Next {
 			s.l.Tracef("adding node %s child (%s) to stack", nd.Name, child)
 			if child == "" {
-				return nil, fmt.Errorf(
+				return data.Node{}, fmt.Errorf(
 					"node '%s' child had corrupt name",
 					nd.Name,
 				)
 			}
 
 			if dag.Nodes[child].Name == "" {
-				return nil, fmt.Errorf(
+				return data.Node{}, fmt.Errorf(
 					"node '%s' child obj had corrupt name (key=%s)",
 					nd.Name,
 					child,
@@ -89,8 +101,8 @@ func (s DefaultSplitter) FindCandidate(dag data.DAG) (*data.Node, error) {
 		}
 	}
 
-	if candidate == nil {
-		return nil, fmt.Errorf("failed to select a split candidate")
+	if candidateFound == false {
+		return data.Node{}, fmt.Errorf("failed to select a split candidate")
 	}
 	s.l.Debugf("selected candidate '%s' has best split score: %f", candidate.Name, bestScore)
 	return candidate, nil

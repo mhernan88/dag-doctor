@@ -40,6 +40,26 @@ func NewDAGFromMap(nodes map[string]Node) (*DAG, error) {
 	return &dag, nil
 }
 
+func SliceMap(nodes map[string]Node) ([]string, []Node) {
+	var outputNodeNames []string
+	var outputNodes []Node
+	for nodeName, node := range nodes {
+		outputNodeNames = append(outputNodeNames, nodeName)
+		outputNodes = append(outputNodes, node)
+	}
+	return outputNodeNames, outputNodes
+}
+
+func SliceMapKeys(nodes map[string]Node) []string {
+	keys, _ := SliceMap(nodes)
+	return keys
+}
+
+func SliceMapValues(nodes map[string]Node) []Node {
+	_, values := SliceMap(nodes)
+	return values
+}
+
 type DAG struct {
 	Roots map[string]Node
 	Nodes map[string]Node
@@ -60,9 +80,7 @@ func (d *DAG) Pop(name string) {
 	}
 }
 
-// Deletes nodes that do not have corresponding node inputs/outputs.
-func (d *DAG) reconcileNodesWithInputsAndOutputs() {
-	// Find all nodes in inputs/outputs.
+func (d *DAG) CompileInputsAndOutputs() mapset.Set[string] {
 	allNames := mapset.NewSet[string]()
 	for _, node := range d.Nodes {
 		for _, prevNodeName := range node.Prev {
@@ -72,6 +90,13 @@ func (d *DAG) reconcileNodesWithInputsAndOutputs() {
 			allNames.Add(nextNodeName)
 		}
 	}
+	return allNames
+}
+
+// Deletes nodes that do not have corresponding node inputs/outputs.
+func (d *DAG) reconcileNodesWithInputsAndOutputs() {
+	// Find all nodes in inputs/outputs.
+	allNames := d.CompileInputsAndOutputs()
 
 	// Find nodes not in inputs/outputs.
 	var nodesToDelete []string
@@ -91,7 +116,7 @@ func (d *DAG) reconcileNodesWithInputsAndOutputs() {
 func (d *DAG) reconcileInputsAndOutputsWithNodes() {
 	// Find all unique node names.
 	allNames := mapset.NewSet[string]()
-	for nodeName, _ := range d.Nodes {
+	for nodeName := range d.Nodes {
 		allNames.Add(nodeName)
 	}
 
@@ -99,7 +124,7 @@ func (d *DAG) reconcileInputsAndOutputsWithNodes() {
 	for nodeName, node := range d.Nodes {
 		var newPrev []string
 		for _, prevName := range node.Prev {
-			if allNames.Contains(prevName) {
+			if !allNames.Contains(prevName) {
 				newPrev = append(newPrev, prevName)
 			}
 		}
@@ -118,6 +143,9 @@ func (d *DAG) reconcileInputsAndOutputsWithNodes() {
 }
 
 func (d *DAG) Reconcile() {
+	// TODO: Shouldn't have to run these each twice...
+	d.reconcileNodesWithInputsAndOutputs()
+	d.reconcileInputsAndOutputsWithNodes()
 	d.reconcileNodesWithInputsAndOutputs()
 	d.reconcileInputsAndOutputsWithNodes()
 
@@ -128,16 +156,35 @@ func (d *DAG) Reconcile() {
 			delete(d.Roots, rootName)
 		}
 	}
+	isReconciled, labelsAndNotNodes, nodesAndNotLabels := d.IsReconciled()
+	if !isReconciled {
+		fmt.Printf("labels not nodes: %v; nodes not labels: %v", labelsAndNotNodes, nodesAndNotLabels)
+		panic("recon failed!!!")
+	}
+}
+
+// Returns whether dag is reconciled, labels (inputs/outputs) not in nodes, and nodes not in labels (inputs/outputs).
+func (d *DAG) IsReconciled() (bool, []string, []string) {
+	labels := d.CompileInputsAndOutputs()
+	names := mapset.NewSetFromMapKeys[string](d.Nodes)
+
+	labelsAndNotNodes := labels.Difference(names).ToSlice()
+	NodesAndNotLabels := names.Difference(labels).ToSlice()
+	return len(labels.SymmetricDifference(names).ToSlice()) == 0, labelsAndNotNodes, NodesAndNotLabels
 }
 
 func (d *DAG) Slice() ([]string, []Node) {
-	var nodeNames []string
-	var nodes []Node
-	for nodeName, node := range d.Nodes {
-		nodeNames = append(nodeNames, nodeName)
-		nodes = append(nodes, node)
-	}
-	return nodeNames, nodes
+	return SliceMap(d.Nodes)
+}
+
+func (d *DAG) SliceKeys() []string {
+	keys, _ := d.Slice()
+	return keys
+}
+
+func (d *DAG) SliceValues() []Node {
+	_, values := d.Slice()
+	return values
 }
 
 func (d *DAG) Ancestors(node string) map[string]Node {

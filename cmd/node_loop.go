@@ -22,17 +22,16 @@ func (ui *UI) CheckNode(node data.Node) (bool, []string, error) {
 		}
 	}
 
-	var prunedNodes []string
+	var prunedNodes map[string]data.Node
 	if allDatasetsOK {
-		ui.dag = ui.pruner.PruneBefore(node.Name, ui.dag)
+		ui.dag, prunedNodes = ui.pruner.PruneBefore(node.Name, ui.dag)
 		fmt.Printf("|-> %v node %s cleared OK\n", emoji.CheckMarkButton, node.Name)
-		// TODO: Add pruned nodes to other list.
-		// fmt.Printf("|---> pruned nodes: %v\n", prunedNodes)
+		fmt.Printf("|---> pruned upstream nodes: %v\n", data.SliceMapKeys(prunedNodes))
 		return true, nil, nil
 	} else {
-		ui.dag = ui.pruner.PruneAfter(node.Name, ui.dag)
+		ui.dag, prunedNodes = ui.pruner.PruneAfter(node.Name, ui.dag)
 		fmt.Printf("|-> %v node %s has ERR\n", emoji.CrossMarkButton, node.Name)
-		fmt.Printf("|---> pruned nodes: %v\n", prunedNodes)
+		fmt.Printf("|---> pruned downstream nodes: %v\n", data.SliceMapKeys(prunedNodes))
 		return false, nil, nil
 	}
 }
