@@ -37,11 +37,16 @@ func (ui *UI) CheckDAG() error {
 
 		ui.l.Tracef("selected split candidate: %s", node.Name)
 
-		ok, _, err := ui.CheckNode(node)
-		// ui.l.Tracef("prunedNodes = %v", prunedNodes)
+		ok, prunedNodes, err := ui.CheckNode(node)
 		if err != nil {
 			return err
 		}
+		ui.l.Tracef("prunedNodes = %v", data.SliceMapKeys(prunedNodes))
+        ui.l.Debugf(
+            "%d ok nodes; %d err nodes", 
+            len(ui.errNodes), 
+            len(ui.okNodes),
+        )
 
 		if !ok {
 			dagOK = false

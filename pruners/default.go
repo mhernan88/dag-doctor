@@ -131,6 +131,7 @@ func (p DefaultPruner) PruneAfter(
 	newNode.Next = []string{}
 	dag.Nodes[node] = newNode
 
+	pruneableNodes[node] = dag.Nodes[node]
 	dag.Pop(node)
 	dag.Reconcile()
 	return dag, pruneableNodes
