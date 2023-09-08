@@ -101,19 +101,29 @@ func TestPruneAfter(t *testing.T) {
 
 	p := NewDefaultPruner(99, l)
 
-	dag = p.PruneAfter("create_wide_table", dag)
+    dag, prunedNodes := p.PruneAfter("create_wide_table", dag)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if len(dag.Nodes) != 4 {
+    expected := 3
+	if len(dag.Nodes) != expected {
 		t.Errorf(
 			"nodes after PruneAfter, expected %d, got %d",
-			4, len(dag.Nodes))
+			expected, len(dag.Nodes))
 		t.Logf("nodes: %v", dag.Nodes)
 		return
 	}
+
+    expected = 3
+    if len(prunedNodes) != expected {
+        t.Errorf(
+            "prunedNodes after PruneAfter, expected %d, got %d",
+            expected, len(prunedNodes))
+        t.Logf("prunedNodes: %v", data.SliceMapKeys(prunedNodes))
+        return
+    }
 }
 
 func TestPruneBefore(t *testing.T) {
@@ -139,7 +149,7 @@ func TestPruneBefore(t *testing.T) {
 		return
 	}
 
-	prunedNodes := p.PruneBefore("create_wide_table", dag)
+	dag, prunedNodes := p.PruneBefore("create_wide_table", dag)
 	if err != nil {
 		t.Error(err)
 		return
@@ -147,8 +157,8 @@ func TestPruneBefore(t *testing.T) {
 
 	t.Logf("pruned: %v", prunedNodes)
 
-	const nodesAfter = 3
-	if len(dag.Nodes) != nodesAfter {
+    expected := 3
+	if len(dag.Nodes) != expected {
 		// Should be pruned:
 		// - prep_shuttles_and_routes
 		// - prep_companies_and_employees
@@ -159,9 +169,18 @@ func TestPruneBefore(t *testing.T) {
 		// - create_final_model
 		t.Errorf(
 			"nodes after PruneBefore: expected %d, got %d",
-			nodesAfter, len(dag.Nodes),
+			expected, len(dag.Nodes),
 		)
 		t.Logf("nodes: %v", dag.Nodes)
 		return
 	}
+
+    expected = 3
+    if len(prunedNodes) != expected {
+        t.Errorf(
+            "prunedNodes after PruneBefore, expected %d, got %d",
+            expected, len(prunedNodes))
+        t.Logf("prunedNodes: %v", data.SliceMapKeys(prunedNodes))
+        return
+    }
 }

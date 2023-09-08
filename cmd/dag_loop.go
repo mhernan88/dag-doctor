@@ -43,9 +43,10 @@ func (ui *UI) CheckDAG() error {
 		}
 		ui.l.Tracef("prunedNodes = %v", data.SliceMapKeys(prunedNodes))
         ui.l.Debugf(
-            "%d ok nodes; %d err nodes", 
-            len(ui.errNodes), 
-            len(ui.okNodes),
+            "%d ok nodes; %d err nodes; %d remaining nodes", 
+            len(ui.okNodes), 
+            len(ui.errNodes),
+            len(ui.dag.Nodes),
         )
 
 		if !ok {
