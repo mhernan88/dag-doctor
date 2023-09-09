@@ -107,7 +107,7 @@ func TestPruneAfter(t *testing.T) {
 		return
 	}
 
-    expected := 3
+    expected := 2
 	if len(dag.Nodes) != expected {
 		t.Errorf(
 			"nodes after PruneAfter, expected %d, got %d",
@@ -116,7 +116,7 @@ func TestPruneAfter(t *testing.T) {
 		return
 	}
 
-    expected = 3
+    expected = 4
     if len(prunedNodes) != expected {
         t.Errorf(
             "prunedNodes after PruneAfter, expected %d, got %d",
@@ -157,14 +157,14 @@ func TestPruneBefore(t *testing.T) {
 
 	t.Logf("pruned: %v", prunedNodes)
 
-    expected := 3
+    expected := 2
 	if len(dag.Nodes) != expected {
 		// Should be pruned:
 		// - prep_shuttles_and_routes
 		// - prep_companies_and_employees
 		// - prep_reviews_and_ratings
-		// Should remain:
 		// - create_wide_table
+		// Should remain:
 		// - postprocess_table
 		// - create_final_model
 		t.Errorf(
@@ -175,7 +175,7 @@ func TestPruneBefore(t *testing.T) {
 		return
 	}
 
-    expected = 3
+    expected = 4
     if len(prunedNodes) != expected {
         t.Errorf(
             "prunedNodes after PruneBefore, expected %d, got %d",

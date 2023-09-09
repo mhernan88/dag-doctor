@@ -93,27 +93,65 @@ func (d *DAG) CompileInputsAndOutputs() mapset.Set[string] {
 	return allNames
 }
 
+// Removes references to name from Prev/Next. Returns number of nodes changed.
+func (d *DAG) Unlink(name string) int {
+    // Delete a node from Next
+    fmt.Printf("checking children for node %s\n", name)
+    unlinkedNodes := mapset.NewSet[string]()
+    for nodeName, node := range d.Nodes {
+        var newChildren []string
+        for _, childName := range node.Next {
+            if childName != name {
+                newChildren = append(newChildren, childName)
+            } else {
+                fmt.Println("killng child!")
+                unlinkedNodes.Add(nodeName)
+            }
+        }
+        node.Next = newChildren
+        d.Nodes[nodeName] = node
+    }
+
+    // Delete a node from Prev
+    fmt.Printf("checking parents for node %s\n", name)
+    for nodeName, node := range d.Nodes {
+        var newParents []string
+        for _, parentName := range node.Prev {
+            if parentName != name {
+                newParents = append(newParents, parentName)
+            } else {
+                fmt.Println("killng parent!")
+                unlinkedNodes.Add(nodeName)
+            }
+        }
+        node.Prev = newParents
+        d.Nodes[nodeName] = node
+    }
+    return len(unlinkedNodes.ToSlice())
+}
+
 // Deletes nodes that do not have corresponding node inputs/outputs.
-func (d *DAG) reconcileNodesWithInputsAndOutputs() {
+func (d *DAG) reconcileNodesWithInputsAndOutputs() int {
 	// Find all nodes in inputs/outputs.
 	allNames := d.CompileInputsAndOutputs()
 
 	// Find nodes not in inputs/outputs.
-	var nodesToDelete []string
+    nodesToDelete := mapset.NewSet[string]()
 	for nodeName := range d.Nodes {
 		if !allNames.Contains(nodeName) {
-			nodesToDelete = append(nodesToDelete, nodeName)
+            nodesToDelete.Add(nodeName)
 		}
 	}
 
 	// Delete nodes not in inputs/outputs.
-	for _, nodeToDelete := range nodesToDelete {
+	for _, nodeToDelete := range nodesToDelete.ToSlice() {
 		delete(d.Nodes, nodeToDelete)
 	}
+    return len(nodesToDelete.ToSlice())
 }
 
 // Deletes node inputs/outputs that do not have a corresponding node.
-func (d *DAG) reconcileInputsAndOutputsWithNodes() {
+func (d *DAG) reconcileInputsAndOutputsWithNodes() int {
 	// Find all unique node names.
 	allNames := mapset.NewSet[string]()
 	for nodeName := range d.Nodes {
@@ -121,33 +159,39 @@ func (d *DAG) reconcileInputsAndOutputsWithNodes() {
 	}
 
 	// Delete inputs/outputs not in nodes.
+    deletedInputsAndOutputs := mapset.NewSet[string]()
 	for nodeName, node := range d.Nodes {
 		var newPrev []string
 		for _, prevName := range node.Prev {
-			if !allNames.Contains(prevName) {
+			if allNames.Contains(prevName) {
 				newPrev = append(newPrev, prevName)
-			}
+			} else {
+                deletedInputsAndOutputs.Add(nodeName)
+            }
 		}
 		node.Prev = newPrev
 
 		var newNext []string
 		for _, nextName := range node.Next {
-			if !allNames.Contains(nextName) {
+			if allNames.Contains(nextName) {
 				newNext = append(newNext, nextName)
-			}
+			} else {
+                deletedInputsAndOutputs.Add(nodeName)
+            }
 		}
 		node.Next = newNext
 
 		d.Nodes[nodeName] = node
 	}
+    return len(deletedInputsAndOutputs.ToSlice())
 }
 
 func (d *DAG) Reconcile() {
 	// TODO: Shouldn't have to run these each twice...
 	d.reconcileNodesWithInputsAndOutputs()
 	d.reconcileInputsAndOutputsWithNodes()
-	d.reconcileNodesWithInputsAndOutputs()
-	d.reconcileInputsAndOutputsWithNodes()
+	// d.reconcileNodesWithInputsAndOutputs()
+	// d.reconcileInputsAndOutputsWithNodes()
 
 	// Delete any lingering roots.
 	for rootName := range d.Roots {
