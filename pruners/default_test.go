@@ -98,6 +98,10 @@ func TestPruneAfter(t *testing.T) {
 		return
 	}
 	dag := *dagPtr
+	if len(dag.Nodes) != 6 {
+		t.Error("dag loaded improperly")
+		return
+	}
 
 	p := NewDefaultPruner(99, l)
 
@@ -107,7 +111,7 @@ func TestPruneAfter(t *testing.T) {
 		return
 	}
 
-    expected := 2
+    expected := 3
 	if len(dag.Nodes) != expected {
 		t.Errorf(
 			"nodes after PruneAfter, expected %d, got %d",
@@ -116,7 +120,7 @@ func TestPruneAfter(t *testing.T) {
 		return
 	}
 
-    expected = 4
+    expected = 3
     if len(prunedNodes) != expected {
         t.Errorf(
             "prunedNodes after PruneAfter, expected %d, got %d",

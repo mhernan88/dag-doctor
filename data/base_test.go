@@ -95,7 +95,7 @@ func TestReconNodesWithInputsAndOutputs1(t *testing.T) {
         return
     }
 
-    n := dag.reconcileNodesWithInputsAndOutputs()
+    n := dag.ReconcileNodesWithInputsAndOutputs()
     if n != 0 {
         t.Errorf("nodesWithInputsAndOuputs n: expected 0, got %d", n)
     }
@@ -113,10 +113,10 @@ func TestReconNodesWithInputsAndOutputs2(t *testing.T) {
     const nodeToDelete = "create_final_model"
     n := dag.Unlink(nodeToDelete)
     if n != 2 {
-        t.Errorf("TestUnlink n: expected 2, got %d", n)
+        t.Errorf("Unlink n: expected 2, got %d", n)
     }
 
-    n = dag.reconcileNodesWithInputsAndOutputs()
+    n = dag.ReconcileNodesWithInputsAndOutputs()
     if n != 1 {
         t.Errorf("nodesWithInputsAndOuputs n: expected 1, got %d", n)
     }
@@ -131,7 +131,7 @@ func TestReconInputsAndOutputsWithNodes1(t *testing.T) {
         return
     }
 
-    n := dag.reconcileInputsAndOutputsWithNodes()
+    n := dag.ReconcileInputsAndOutputsWithNodes()
     if n != 0 {
         t.Errorf("nodesWithInputsAndOuputs n: expected 0, got %d", n)
     }
@@ -149,8 +149,9 @@ func TestReconInputsAndOutputsWithNodes2(t *testing.T) {
     const nodeToDelete = "create_final_model"
     delete(dag.Nodes, nodeToDelete)
 
-    n := dag.reconcileInputsAndOutputsWithNodes()
+    n := dag.ReconcileInputsAndOutputsWithNodes()
     if n != 2 {
         t.Errorf("nodesWithInputsAndOuputs n: expected 2, got %d", n)
     }
 }
+

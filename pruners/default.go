@@ -57,49 +57,15 @@ func (p DefaultPruner) PruneBefore(
 	dag data.DAG,
 ) (data.DAG, map[string]data.Node) {
 	p.l.Tracef("pruning nodes before %s", node)
-	if len(dag.Nodes[node].Prev) == 0 {
-		p.l.Debugf("node %s had no parents to prune", node)
-		dag.Pop(node)
-		dag.Reconcile()
-		return dag, nil
-	}
-
 	pruneableNodes := p.findUpstreamPruneableNodes(node, dag)
-	for rootName := range dag.Roots {
-		_, ok := pruneableNodes[rootName]
-		if ok {
-			delete(dag.Roots, rootName)
-		}
-	}
-
-	for nodeName, node := range dag.Nodes {
-		_, ok := pruneableNodes[nodeName]
-		if ok {
-			delete(dag.Nodes, nodeName)
-		}
-
-		var newNext []string
-		for _, elem := range node.Next {
-			_, ok := pruneableNodes[elem]
-			if !ok {
-				newNext = append(newNext, elem)
-			}
-		}
-		node.Next = newNext
-
-		var newPrev []string
-		for _, elem := range node.Prev {
-			_, ok := pruneableNodes[elem]
-			if !ok {
-				newPrev = append(newPrev, elem)
-			}
-		}
-		node.Prev = newPrev
-	}
-
 	pruneableNodes[node] = dag.Nodes[node]
-	dag.Pop(node)
-	dag.Reconcile()
+
+	for name := range pruneableNodes {
+		p.l.Tracef("PruneBefore popping node %s", name)
+		dag.Pop(name)
+	}
+
+	dag.ReconcileInputsAndOutputsWithNodes()
 	return dag, pruneableNodes
 }
 
@@ -108,31 +74,18 @@ func (p DefaultPruner) PruneAfter(
 	dag data.DAG,
 ) (data.DAG, map[string]data.Node) {
 	p.l.Tracef("pruning nodes after %s", node)
-	if len(dag.Nodes[node].Next) == 0 {
-		p.l.Debugf("node %s had no children to prune", node)
-		dag.Pop(node)
-		dag.Reconcile()
-		return dag, make(map[string]data.Node)
-	}
 	pruneableNodes := make(map[string]data.Node)
+	pruneableNodes[node] = dag.Nodes[node]
 
-	// Fault has to be before this point.
-	descendants := dag.Descendants(node)
-	for descendantName, descendant := range descendants {
+	for descendantName, descendant := range dag.Descendants(node) {
 		pruneableNodes[descendantName] = descendant
-		delete(dag.Nodes, descendantName)
-		_, ok := dag.Roots[descendantName]
-		if !ok {
-			delete(dag.Roots, descendantName)
-		}
 	}
 
-	newNode := dag.Nodes[node]
-	newNode.Next = []string{}
-	dag.Nodes[node] = newNode
+	for name := range pruneableNodes {
+		p.l.Tracef("PruneAfter popping node %s", name)
+		dag.Pop(name)
+	}
 
-	pruneableNodes[node] = dag.Nodes[node]
-	dag.Pop(node)
-	dag.Reconcile()
+	dag.ReconcileInputsAndOutputsWithNodes()
 	return dag, pruneableNodes
 }
