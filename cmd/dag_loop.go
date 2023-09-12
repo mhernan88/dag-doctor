@@ -7,8 +7,8 @@ import (
 	"github.com/mhernan88/dag-bisect/data"
 )
 
-func (ui *UI) terminate(ok bool, nodeName string) {
-	if ok {
+func (ui *UI) terminate() {
+	if ui.lastFailedNode == "" {
 		fmt.Printf(
 			"%v dag ok\n",
 			emoji.GrinningFace,
@@ -17,7 +17,7 @@ func (ui *UI) terminate(ok bool, nodeName string) {
 		fmt.Printf(
 			"%v source of error: '%s'\n",
 			emoji.Skull,
-			nodeName,
+			ui.lastFailedNode,
 		)
 	}
 }
@@ -25,7 +25,6 @@ func (ui *UI) terminate(ok bool, nodeName string) {
 func (ui *UI) CheckDAG() error {
 	fmt.Println("inspecting DAG")
 
-	dagOK := true
 	var node data.Node
 	var err error
 
@@ -37,7 +36,7 @@ func (ui *UI) CheckDAG() error {
 
 		ui.l.Tracef("selected split candidate: %s", node.Name)
 
-		ok, prunedNodes, err := ui.CheckNode(node)
+		prunedNodes, err := ui.CheckNode(node)
 		if err != nil {
 			return err
 		}
@@ -49,10 +48,10 @@ func (ui *UI) CheckDAG() error {
             len(ui.dag.Nodes),
         )
 
-		if !ok {
-			dagOK = false
-		}
 	}
-	ui.terminate(dagOK, node.Name)
+
+	// Automatically terminates on the last-viewed node.
+	// Not necessarily the error node (esp if the last node was OK)
+	ui.terminate()
 	return nil
 }

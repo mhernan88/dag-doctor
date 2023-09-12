@@ -18,6 +18,7 @@ func NewUI(
 		dag:            dag,
 		okNodes:        make(map[string]data.Node),
 		errNodes:       make(map[string]data.Node),
+		lastFailedNode: "",
 		splitter:       splitter,
 		pruner:         pruner,
 		iterationLimit: iterationLimit,
@@ -29,6 +30,7 @@ type UI struct {
 	dag            data.DAG
 	okNodes        map[string]data.Node
 	errNodes       map[string]data.Node
+	lastFailedNode string
 	splitter       splitters.Splitter
 	pruner         pruners.Pruner
 	iterationLimit int

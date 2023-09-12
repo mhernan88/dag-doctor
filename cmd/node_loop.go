@@ -20,7 +20,12 @@ func (ui *UI) checkDatasets(node data.Node) (bool, error) {
     return true, nil
 }
 
-func (ui *UI) pruneNodes(node data.Node, allDatasetsOK bool) map[string]data.Node {
+func (ui *UI) pruneNodes(
+	node data.Node, 
+	allDatasetsOK bool,
+) (
+	map[string]data.Node,
+) {
 	var prunedNodes map[string]data.Node
 	if allDatasetsOK {
 		ui.dag, prunedNodes = ui.pruner.PruneBefore(node.Name, ui.dag)
@@ -38,15 +43,16 @@ func (ui *UI) pruneNodes(node data.Node, allDatasetsOK bool) map[string]data.Nod
     }
     fmt.Printf("|-> %v node %s has ERR\n", emoji.CrossMarkButton, node.Name)
     fmt.Printf("|---> pruned downstream nodes: %v\n", data.SliceMapKeys(prunedNodes))
+	ui.lastFailedNode = node.Name
     return prunedNodes
 }
 
-func (ui *UI) CheckNode(node data.Node) (bool, map[string]data.Node, error) {
+func (ui *UI) CheckNode(node data.Node) (map[string]data.Node, error) {
 	fmt.Printf("|-> %v inspecting node: %s\n", emoji.Microscope, node.Name)
     allDatasetsOK, err := ui.checkDatasets(node)
     if err != nil {
-        return false, nil, err
+        return nil, err
     }
     prunedNodes := ui.pruneNodes(node, allDatasetsOK)
-    return allDatasetsOK, prunedNodes, nil
+    return prunedNodes, nil
 }
