@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/mhernan88/dag-bisect/cmd"
+	"github.com/mhernan88/dag-bisect/cmd/telemetry"
 	"github.com/mhernan88/dag-bisect/data"
 	"github.com/mhernan88/dag-bisect/pruners"
 	"github.com/mhernan88/dag-bisect/splitters"
@@ -101,6 +102,9 @@ func main() {
 		Usage:  "Recursively bisect a DAG to quickly locate data errors",
 		Flags:  flags,
 		Action: action,
+		Commands: []*cli.Command{
+			&telemetry.OptCmd,
+		},
 	}
 
 	err := app.Run(os.Args)
