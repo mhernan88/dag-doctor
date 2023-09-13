@@ -55,15 +55,6 @@ func (s DefaultSplitter) FindCandidate(dag data.DAG) (data.Node, error) {
 		if !ok {
 			return data.Node{}, fmt.Errorf("failed to pull node %s from map", key)
 		}
-
-		// isReconciled, labelsAndNotNodes, nodesAndNotlabels := dag.IsReconciled()
-		// if !isReconciled {
-		// 	return data.Node{}, fmt.Errorf(
-		// 		"dag not reconciled, excess labels = %v, excess nodes = %v",
-		// 		labelsAndNotNodes, nodesAndNotlabels,
-		// 	)
-		// }
-
 		s.l.Tracef("popped node %s from queue", nd.Name)
 
 		numAncestors := len(dag.Ancestors(key))

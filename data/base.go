@@ -290,4 +290,5 @@ type Node struct {
 	Outputs []string `json:"outputs"`
 	Next    []string `json:"next"` // []nodeName
 	Prev    []string `json:"prev"` // []nodeName
+	Status string `json:"-"`
 }

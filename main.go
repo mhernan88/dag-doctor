@@ -5,10 +5,13 @@ import (
 	"log"
 	"os"
 
-	"github.com/mhernan88/dag-bisect/cmd"
 	"github.com/mhernan88/dag-bisect/data"
-	"github.com/mhernan88/dag-bisect/pruners"
-	"github.com/mhernan88/dag-bisect/splitters"
+	"github.com/mhernan88/dag-bisect/tui"
+	"github.com/rivo/tview"
+
+	// "github.com/mhernan88/dag-bisect/pruners"
+	// "github.com/mhernan88/dag-bisect/splitters"
+	// "github.com/mhernan88/dag-bisect/tui"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -16,21 +19,6 @@ import (
 const version = "v0.1.0"
 
 var flags = []cli.Flag{
-	&cli.BoolFlag{
-		Name:  "v",
-		Value: false,
-		Usage: "verbose - info level",
-	},
-	&cli.BoolFlag{
-		Name:  "vv",
-		Value: false,
-		Usage: "verbose - debug level",
-	},
-	&cli.BoolFlag{
-		Name:  "vvv",
-		Value: false,
-		Usage: "verbose - trace level",
-	},
 	&cli.StringFlag{
 		Name:    "dag",
 		Aliases: []string{"d"},
@@ -46,38 +34,18 @@ var flags = []cli.Flag{
 
 func action(c *cli.Context) error {
 	l := logrus.New()
-	l.SetLevel(logrus.WarnLevel)
+	l.SetLevel(logrus.ErrorLevel)
 
-	if c.Bool("v") {
-		l.SetLevel(logrus.InfoLevel)
-		l.Info("logging set to INFO level")
-	}
+	// splitter := splitters.NewDefaultSplitter(
+	// 	c.Int("iteration_limit"),
+	// 	l,
+	// )
+	//
+	// pruner := pruners.NewDefaultPruner(
+	// 	c.Int("iteration_limit"),
+	// 	l,
+	// )
 
-	if c.Bool("vv") {
-		l.SetLevel(logrus.DebugLevel)
-		l.Info("logging set to DEBUG level")
-	}
-
-	if c.Bool("vvv") {
-		l.SetLevel(logrus.TraceLevel)
-		l.Info("logging set to TRACE level")
-	}
-
-	fmt.Printf("dag-bisect %s\n", version)
-
-	l.Debug("initializing splitter")
-	splitter := splitters.NewDefaultSplitter(
-		c.Int("iteration_limit"),
-		l,
-	)
-
-	l.Debug("initializing pruner")
-	pruner := pruners.NewDefaultPruner(
-		c.Int("iteration_limit"),
-		l,
-	)
-
-	l.Debug("loading dag")
 	dag, err := data.LoadDAG(c.String("dag"))
 	if err != nil {
 		return err
@@ -85,14 +53,17 @@ func action(c *cli.Context) error {
 	if dag == nil {
 		return fmt.Errorf("dag wil nil")
 	}
-	l.Infof("loaded %d root nodes (+ additional child nodes) from dag", len(dag.Nodes))
 	if len(dag.Nodes) == 0 {
 		return fmt.Errorf("failed to load dag")
 	}
-	l.Tracef("dag: %v", dag)
 
-	ui := cmd.NewUI(*dag, splitter, pruner, c.Int("iteration_limit"), l)
-	return ui.Run()
+	// ui := tview.NewBox().SetBorder(true).SetTitle("Hello World")
+	grid := tui.CreateLayout()
+	err = tview.NewApplication().SetRoot(grid, true).SetFocus(grid).Run()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func main() {
