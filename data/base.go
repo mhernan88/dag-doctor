@@ -131,26 +131,6 @@ func (d *DAG) Unlink(name string) int {
     return len(unlinkedNodes.ToSlice())
 }
 
-// // Deletes nodes that do not have corresponding node inputs/outputs.
-// func (d *DAG) ReconcileNodesWithInputsAndOutputs() int {
-// 	// Find all nodes in inputs/outputs.
-// 	allNames := d.CompileInputsAndOutputs()
-//
-// 	// Find nodes not in inputs/outputs.
-//     nodesToDelete := mapset.NewSet[string]()
-// 	for nodeName := range d.Nodes {
-// 		if !allNames.Contains(nodeName) {
-//             nodesToDelete.Add(nodeName)
-// 		}
-// 	}
-//
-// 	// Delete nodes not in inputs/outputs.
-// 	for _, nodeToDelete := range nodesToDelete.ToSlice() {
-// 		delete(d.Nodes, nodeToDelete)
-// 	}
-//     return len(nodesToDelete.ToSlice())
-// }
-
 // Deletes node inputs/outputs that do not have a corresponding node.
 func (d *DAG) ReconcileInputsAndOutputsWithNodes() int {
 	// Find all unique node names.
