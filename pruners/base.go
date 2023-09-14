@@ -7,4 +7,5 @@ import (
 type Pruner interface {
 	PruneBefore(node string, dag data.DAG) (data.DAG, map[string]data.Node)
 	PruneAfter(node string, dag data.DAG) (data.DAG, map[string]data.Node)
+	GetName() string
 }

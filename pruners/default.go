@@ -5,16 +5,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func NewDefaultPruner(iterationLimit int, l *logrus.Logger) DefaultPruner {
+func NewDefaultPruner() DefaultPruner {
 	return DefaultPruner{
-		iterationLimit: iterationLimit,
-		l:              l,
+		Name: "default",
 	}
 }
 
 type DefaultPruner struct {
-	iterationLimit int
-	l              *logrus.Logger
+	Name string `json:"name"`
 }
 
 // Finds all nodes that can be pruned before `source`
@@ -22,14 +20,15 @@ type DefaultPruner struct {
 func (p DefaultPruner) findUpstreamPruneableNodes(
 	node string,
 	dag data.DAG,
+	l *logrus.Logger,
 ) map[string]data.Node {
-	p.l.Tracef("finding pruneable nodes before %s", node)
+	l.Tracef("finding pruneable nodes before %s", node)
 	if len(dag.Nodes[node].Prev) == 0 {
 		return make(map[string]data.Node)
 	}
 
 	ancestorsMap := dag.Ancestors(node)
-	p.l.Tracef("pulling pruneable nodes from %d ancestors", len(ancestorsMap))
+	l.Tracef("pulling pruneable nodes from %d ancestors", len(ancestorsMap))
 
 	pruneableAncestorsMap := make(map[string]data.Node)
 	for ancestorName, ancestor := range ancestorsMap {
@@ -37,7 +36,7 @@ func (p DefaultPruner) findUpstreamPruneableNodes(
 		for _, childName := range ancestor.Next {
 			_, ok := ancestorsMap[childName]
 			if !ok {
-				p.l.Tracef("%s is not pruneable (it is not an ancestor)", ancestorName)
+				l.Tracef("%s is not pruneable (it is not an ancestor)", ancestorName)
 				isPruneable = false
 				break
 			}
@@ -55,13 +54,14 @@ func (p DefaultPruner) findUpstreamPruneableNodes(
 func (p DefaultPruner) PruneBefore(
 	node string,
 	dag data.DAG,
+	l *logrus.Logger,
 ) (data.DAG, map[string]data.Node) {
-	p.l.Tracef("pruning nodes before %s", node)
-	pruneableNodes := p.findUpstreamPruneableNodes(node, dag)
+	l.Tracef("pruning nodes before %s", node)
+	pruneableNodes := p.findUpstreamPruneableNodes(node, dag, l)
 	pruneableNodes[node] = dag.Nodes[node]
 
 	for name := range pruneableNodes {
-		p.l.Tracef("PruneBefore popping node %s", name)
+		l.Tracef("PruneBefore popping node %s", name)
 		dag.Pop(name)
 	}
 
@@ -72,8 +72,9 @@ func (p DefaultPruner) PruneBefore(
 func (p DefaultPruner) PruneAfter(
 	node string,
 	dag data.DAG,
+	l *logrus.Logger,
 ) (data.DAG, map[string]data.Node) {
-	p.l.Tracef("pruning nodes after %s", node)
+	l.Tracef("pruning nodes after %s", node)
 	pruneableNodes := make(map[string]data.Node)
 	pruneableNodes[node] = dag.Nodes[node]
 
@@ -82,7 +83,7 @@ func (p DefaultPruner) PruneAfter(
 	}
 
 	for name := range pruneableNodes {
-		p.l.Tracef("PruneAfter popping node %s", name)
+		l.Tracef("PruneAfter popping node %s", name)
 		dag.Pop(name)
 	}
 

@@ -6,4 +6,5 @@ import (
 
 type Splitter interface {
 	FindCandidate(dag data.DAG) (data.Node, error)
+	GetName() string
 }
