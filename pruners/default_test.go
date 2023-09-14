@@ -1,10 +1,10 @@
 package pruners
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/mhernan88/dag-bisect/data"
-	"github.com/sirupsen/logrus"
 )
 
 // DAG
@@ -27,8 +27,7 @@ import (
 // ----> prep_comp_and_emp also feeds into a non-ancestor node.
 
 func TestFindUpstreamPruneableNodes(t *testing.T) {
-	l := logrus.New()
-	l.SetLevel(logrus.TraceLevel)
+	l := slog.Default()
 
 	dagPtr, err := data.LoadDAG("../dag.json")
 	if err != nil {
@@ -37,8 +36,8 @@ func TestFindUpstreamPruneableNodes(t *testing.T) {
 	}
 	dag := *dagPtr
 
-	p := NewDefaultPruner(99, l)
-	pruneableNodes := p.findUpstreamPruneableNodes("create_wide_table", dag)
+	p := NewDefaultPruner()
+	pruneableNodes := p.findUpstreamPruneableNodes("create_wide_table", dag, l)
 	t.Logf("pruneable nodes: %v", pruneableNodes)
 
 	expectedPruneableNodes := []string{
@@ -60,8 +59,7 @@ func TestFindUpstreamPruneableNodes(t *testing.T) {
 }
 
 func TestFindUpstreamPruneableNodes2(t *testing.T) {
-	l := logrus.New()
-	l.SetLevel(logrus.TraceLevel)
+	l := slog.Default()
 
 	dagPtr, err := data.LoadDAG("../dag.json")
 	if err != nil {
@@ -70,8 +68,8 @@ func TestFindUpstreamPruneableNodes2(t *testing.T) {
 	}
 	dag := *dagPtr
 
-	p := NewDefaultPruner(99, l)
-	pruneableNodes := p.findUpstreamPruneableNodes("preprocess_shuttles_and_routes", dag)
+	p := NewDefaultPruner()
+	pruneableNodes := p.findUpstreamPruneableNodes("preprocess_shuttles_and_routes", dag, l)
 	t.Logf("pruneable nodes: %v", pruneableNodes)
 
 	expectedPruneableNodes := []string{}
@@ -89,8 +87,7 @@ func TestFindUpstreamPruneableNodes2(t *testing.T) {
 }
 
 func TestPruneAfter(t *testing.T) {
-	l := logrus.New()
-	l.SetLevel(logrus.TraceLevel)
+	l := slog.Default()
 
 	dagPtr, err := data.LoadDAG("../dag.json")
 	if err != nil {
@@ -103,9 +100,9 @@ func TestPruneAfter(t *testing.T) {
 		return
 	}
 
-	p := NewDefaultPruner(99, l)
+	p := NewDefaultPruner()
 
-    dag, prunedNodes := p.PruneAfter("create_wide_table", dag)
+    dag, prunedNodes := p.PruneAfter("create_wide_table", dag, l)
 	if err != nil {
 		t.Error(err)
 		return
@@ -131,8 +128,7 @@ func TestPruneAfter(t *testing.T) {
 }
 
 func TestPruneBefore(t *testing.T) {
-	l := logrus.New()
-	l.SetLevel(logrus.TraceLevel)
+	l := slog.Default()
 
 	dagPtr, err := data.LoadDAG("../dag.json")
 	if err != nil {
@@ -141,7 +137,7 @@ func TestPruneBefore(t *testing.T) {
 	}
 	dag := *dagPtr
 
-	p := NewDefaultPruner(99, l)
+	p := NewDefaultPruner()
 
 	const nodesBefore = 6
 	if len(dag.Nodes) != nodesBefore {
@@ -153,7 +149,7 @@ func TestPruneBefore(t *testing.T) {
 		return
 	}
 
-	dag, prunedNodes := p.PruneBefore("create_wide_table", dag)
+	dag, prunedNodes := p.PruneBefore("create_wide_table", dag, l)
 	if err != nil {
 		t.Error(err)
 		return

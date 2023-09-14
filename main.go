@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 
 	"github.com/mhernan88/dag-bisect/cmd"
@@ -12,7 +13,6 @@ import (
 	"github.com/mhernan88/dag-bisect/pruners"
 	"github.com/mhernan88/dag-bisect/shared"
 	"github.com/mhernan88/dag-bisect/splitters"
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -48,37 +48,26 @@ var flags = []cli.Flag{
 }
 
 func action(c *cli.Context) error {
-	l := logrus.New()
-	l.SetLevel(logrus.WarnLevel)
-
-	if c.Bool("v") {
-		l.SetLevel(logrus.InfoLevel)
-		l.Info("logging set to INFO level")
+	logFilename, err := shared.GetLogFilename()
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	if c.Bool("vv") {
-		l.SetLevel(logrus.DebugLevel)
-		l.Info("logging set to DEBUG level")
+	f, err := os.OpenFile(logFilename, os.O_CREATE | os.O_APPEND | os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
 	}
+	defer f.Close()
 
-	if c.Bool("vvv") {
-		l.SetLevel(logrus.TraceLevel)
-		l.Info("logging set to TRACE level")
-	}
+	l := slog.New(slog.NewJSONHandler(f , nil))
 
 	fmt.Printf("dag-bisect %s\n", version)
 
 	l.Debug("initializing splitter")
-	splitter := splitters.NewDefaultSplitter(
-		c.Int("iteration_limit"),
-		l,
-	)
+	splitter := splitters.NewDefaultSplitter()
 
 	l.Debug("initializing pruner")
-	pruner := pruners.NewDefaultPruner(
-		c.Int("iteration_limit"),
-		l,
-	)
+	pruner := pruners.NewDefaultPruner()
 
 	l.Debug("loading dag")
 	dag, err := data.LoadDAG(c.String("dag"))
@@ -88,14 +77,13 @@ func action(c *cli.Context) error {
 	if dag == nil {
 		return fmt.Errorf("dag wil nil")
 	}
-	l.Infof("loaded %d root nodes (+ additional child nodes) from dag", len(dag.Nodes))
+	l.Info("loaded root nodes (+ additional child nodes) from dag", "n", len(dag.Nodes))
 	if len(dag.Nodes) == 0 {
 		return fmt.Errorf("failed to load dag")
 	}
-	l.Tracef("dag: %v", dag)
 
-	ui := cmd.NewUI(*dag, splitter, pruner, c.Int("iteration_limit"), l)
-	return ui.Run()
+	ui := cmd.NewUI(*dag, splitter, pruner)
+	return ui.Run(l)
 }
 
 func main() {

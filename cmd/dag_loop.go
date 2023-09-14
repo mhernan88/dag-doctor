@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/enescakir/emoji"
 	"github.com/mhernan88/dag-bisect/data"
 )
 
 func (ui *UI) terminate() {
-	if ui.lastFailedNode == "" {
+	if ui.LastFailedNode == "" {
 		fmt.Printf(
 			"%v dag ok\n",
 			emoji.GrinningFace,
@@ -17,37 +18,37 @@ func (ui *UI) terminate() {
 		fmt.Printf(
 			"%v source of error: '%s'\n",
 			emoji.Skull,
-			ui.lastFailedNode,
+			ui.LastFailedNode,
 		)
 	}
 }
 
-func (ui *UI) CheckDAG() error {
+func (ui *UI) CheckDAG(l *slog.Logger) error {
 	fmt.Println("inspecting DAG")
 
 	var node data.Node
 	var err error
 
-	for (len(ui.dag.Nodes) > 0) && (len(ui.dag.Roots) > 0) {
-		node, err = ui.splitter.FindCandidate(ui.dag)
+	for (len(ui.DAG.Nodes) > 0) && (len(ui.DAG.Roots) > 0) {
+		node, err = ui.Splitter.FindCandidate(ui.DAG, l)
 		if err != nil {
 			return err
 		}
 
-		ui.l.Tracef("selected split candidate: %s", node.Name)
+		l.Debug("selected split candidate", "candidate", node.Name)
 
-		prunedNodes, err := ui.CheckNode(node)
+		prunedNodes, err := ui.CheckNode(node, l)
 		if err != nil {
 			return err
 		}
-		ui.l.Tracef("prunedNodes = %v", data.SliceMapKeys(prunedNodes))
-        ui.l.Debugf(
-            "%d ok nodes; %d err nodes; %d remaining nodes", 
-            len(ui.okNodes), 
-            len(ui.errNodes),
-            len(ui.dag.Nodes),
-        )
 
+		l.Debug(
+			"completed pruning nodes",
+			"pruned nodes", data.SliceMapKeys(prunedNodes),
+			"ok nodes", len(ui.OKNodes),
+			"err nodes", len(ui.ERRNodes),
+			"remaining nodes", len(ui.DAG.Nodes),
+		)
 	}
 
 	// Automatically terminates on the last-viewed node.

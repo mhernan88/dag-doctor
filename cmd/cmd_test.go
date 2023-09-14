@@ -6,11 +6,9 @@ import (
 	"github.com/mhernan88/dag-bisect/data"
 	"github.com/mhernan88/dag-bisect/pruners"
 	"github.com/mhernan88/dag-bisect/splitters"
-	"github.com/sirupsen/logrus"
 )
 
 func TestSaveState(t *testing.T) {
-	l := logrus.New()
 	dag, err := data.LoadDAG("dag.json")
 	if err != nil {
 		t.Error(err)
@@ -20,8 +18,22 @@ func TestSaveState(t *testing.T) {
 	splitter := splitters.NewDefaultSplitter()
 
 	ui := NewUI(
-		dag, 
+		*dag, 
 		splitter, 
-		pruner, 99, l,
+		pruner,
 	)
+
+	err = SaveState("test.json", ui)
+	if err != nil {
+		t.Error(err)
+	}
+
+	newUI, err := LoadState("test.json")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if newUI.DAG.Nodes == nil {
+		t.Error("dag nodes was nil!")
+	}
 }

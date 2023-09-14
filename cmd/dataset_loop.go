@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/eiannone/keyboard"
 	"github.com/enescakir/emoji"
 )
 
-func (ui *UI) CheckDataset(dataset string) (bool, error) {
+func (ui *UI) CheckDataset(dataset string, l *slog.Logger) (bool, error) {
 	fmt.Printf("|---> inspecting dataset: %s (c or q to exit)\n", dataset)
 
 	fmt.Printf("|---> open '%s' and check if content is correct...\n", dataset)
@@ -21,7 +22,6 @@ func (ui *UI) CheckDataset(dataset string) (bool, error) {
 
 	for {
 		fmt.Println("|---> output correct? (y/n):")
-		ui.l.Trace("reading keyboard input")
 		char, _, err := keyboard.GetKey()
 		if err != nil {
 			return false, err
@@ -33,14 +33,14 @@ func (ui *UI) CheckDataset(dataset string) (bool, error) {
 				"|---> %v dataset '%s' maked OK\n",
 				emoji.CheckMarkButton,
 				dataset)
-			ui.l.Trace("input was 'y', returning true, nil")
+			l.Debug("input was 'y', returning true, nil")
 			return true, nil
 		case 'n', 'N':
 			fmt.Printf(
 				"|---> %v dataset '%s' maked ERR\n",
 				emoji.CrossMarkButton,
 				dataset)
-			ui.l.Trace("input was 'n', returning false, nil")
+			l.Debug("input was 'n', returning false, nil")
 			return false, nil
 		case 'c', 'C', 'q', 'Q':
 			os.Exit(0)

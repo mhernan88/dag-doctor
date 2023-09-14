@@ -1,8 +1,9 @@
 package pruners
 
 import (
+	"log/slog"
+
 	"github.com/mhernan88/dag-bisect/data"
-	"github.com/sirupsen/logrus"
 )
 
 func NewDefaultPruner() DefaultPruner {
@@ -24,15 +25,13 @@ func (p DefaultPruner) GetName() string {
 func (p DefaultPruner) findUpstreamPruneableNodes(
 	node string,
 	dag data.DAG,
-	l *logrus.Logger,
+	l *slog.Logger,
 ) map[string]data.Node {
-	l.Tracef("finding pruneable nodes before %s", node)
 	if len(dag.Nodes[node].Prev) == 0 {
 		return make(map[string]data.Node)
 	}
 
 	ancestorsMap := dag.Ancestors(node)
-	l.Tracef("pulling pruneable nodes from %d ancestors", len(ancestorsMap))
 
 	pruneableAncestorsMap := make(map[string]data.Node)
 	for ancestorName, ancestor := range ancestorsMap {
@@ -40,7 +39,6 @@ func (p DefaultPruner) findUpstreamPruneableNodes(
 		for _, childName := range ancestor.Next {
 			_, ok := ancestorsMap[childName]
 			if !ok {
-				l.Tracef("%s is not pruneable (it is not an ancestor)", ancestorName)
 				isPruneable = false
 				break
 			}
@@ -58,14 +56,12 @@ func (p DefaultPruner) findUpstreamPruneableNodes(
 func (p DefaultPruner) PruneBefore(
 	node string,
 	dag data.DAG,
-	l *logrus.Logger,
+	l *slog.Logger,
 ) (data.DAG, map[string]data.Node) {
-	l.Tracef("pruning nodes before %s", node)
 	pruneableNodes := p.findUpstreamPruneableNodes(node, dag, l)
 	pruneableNodes[node] = dag.Nodes[node]
 
 	for name := range pruneableNodes {
-		l.Tracef("PruneBefore popping node %s", name)
 		dag.Pop(name)
 	}
 
@@ -76,9 +72,8 @@ func (p DefaultPruner) PruneBefore(
 func (p DefaultPruner) PruneAfter(
 	node string,
 	dag data.DAG,
-	l *logrus.Logger,
+	l *slog.Logger,
 ) (data.DAG, map[string]data.Node) {
-	l.Tracef("pruning nodes after %s", node)
 	pruneableNodes := make(map[string]data.Node)
 	pruneableNodes[node] = dag.Nodes[node]
 
@@ -87,7 +82,6 @@ func (p DefaultPruner) PruneAfter(
 	}
 
 	for name := range pruneableNodes {
-		l.Tracef("PruneAfter popping node %s", name)
 		dag.Pop(name)
 	}
 

@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/enescakir/emoji"
 	"github.com/mhernan88/dag-bisect/data"
 )
 
-func (ui *UI) checkDatasets(node data.Node) (bool, error) {
+func (ui *UI) checkDatasets(node data.Node, l *slog.Logger) (bool, error) {
 	for _, output := range node.Outputs {
-		ok, err := ui.CheckDataset(output)
+		ok, err := ui.CheckDataset(output, l)
 		if err != nil {
 			return false, err
 		}
@@ -23,36 +24,37 @@ func (ui *UI) checkDatasets(node data.Node) (bool, error) {
 func (ui *UI) pruneNodes(
 	node data.Node, 
 	allDatasetsOK bool,
+	l *slog.Logger,
 ) (
 	map[string]data.Node,
 ) {
 	var prunedNodes map[string]data.Node
 	if allDatasetsOK {
-		ui.dag, prunedNodes = ui.pruner.PruneBefore(node.Name, ui.dag)
+		ui.DAG, prunedNodes = ui.Pruner.PruneBefore(node.Name, ui.DAG, l)
         for name, node := range prunedNodes {
-            ui.okNodes[name] = node
+            ui.OKNodes[name] = node
         }
 		fmt.Printf("|-> %v node %s cleared OK\n", emoji.CheckMarkButton, node.Name)
 		fmt.Printf("|---> pruned upstream nodes: %v\n", data.SliceMapKeys(prunedNodes))
 		return prunedNodes
 	} 
 
-    ui.dag, prunedNodes = ui.pruner.PruneAfter(node.Name, ui.dag)
+    ui.DAG, prunedNodes = ui.Pruner.PruneAfter(node.Name, ui.DAG, l)
     for name, node := range prunedNodes {
-        ui.errNodes[name] = node
+        ui.ERRNodes[name] = node
     }
     fmt.Printf("|-> %v node %s has ERR\n", emoji.CrossMarkButton, node.Name)
     fmt.Printf("|---> pruned downstream nodes: %v\n", data.SliceMapKeys(prunedNodes))
-	ui.lastFailedNode = node.Name
+	ui.LastFailedNode = node.Name
     return prunedNodes
 }
 
-func (ui *UI) CheckNode(node data.Node) (map[string]data.Node, error) {
+func (ui *UI) CheckNode(node data.Node, l *slog.Logger) (map[string]data.Node, error) {
 	fmt.Printf("|-> %v inspecting node: %s\n", emoji.Microscope, node.Name)
-    allDatasetsOK, err := ui.checkDatasets(node)
+    allDatasetsOK, err := ui.checkDatasets(node, l)
     if err != nil {
         return nil, err
     }
-    prunedNodes := ui.pruneNodes(node, allDatasetsOK)
+    prunedNodes := ui.pruneNodes(node, allDatasetsOK, l)
     return prunedNodes, nil
 }

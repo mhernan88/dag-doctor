@@ -2,20 +2,18 @@ package cmd
 
 import (
 	"encoding/json"
+	"log/slog"
 	"os"
 
 	"github.com/mhernan88/dag-bisect/data"
 	"github.com/mhernan88/dag-bisect/pruners"
 	"github.com/mhernan88/dag-bisect/splitters"
-	"github.com/sirupsen/logrus"
 )
 
 func NewUI(
 	dag data.DAG,
 	splitter splitters.Splitter,
 	pruner pruners.Pruner,
-	iterationLimit int,
-	l *logrus.Logger,
 ) UI {
 	return UI{
 		DAG:            dag,
@@ -61,9 +59,9 @@ type UI struct {
 	Pruner         pruners.Pruner `json:"pruner"`
 }
 
-func (ui *UI) Run(l *logrus.Logger) error {
+func (ui *UI) Run(l *slog.Logger) error {
 	l.Debug("running ui loop")
-	err := ui.CheckDAG()
+	err := ui.CheckDAG(l)
 	if err != nil {
 		return err
 	}

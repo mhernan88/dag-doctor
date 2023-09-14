@@ -1,18 +1,17 @@
 package cmd
 
 import (
+	"log/slog"
 	"strings"
 	"testing"
 
 	"github.com/mhernan88/dag-bisect/data"
 	"github.com/mhernan88/dag-bisect/pruners"
 	"github.com/mhernan88/dag-bisect/splitters"
-	"github.com/sirupsen/logrus"
 )
 
 func TestUI__PruneNodes(t *testing.T) {
-	l := logrus.New()
-	l.SetLevel(logrus.TraceLevel)
+	l := slog.Default()
 
 	dagPtr, err := data.LoadDAG("../dag.json")
 	if err != nil {
@@ -21,13 +20,14 @@ func TestUI__PruneNodes(t *testing.T) {
 	}
 	dag := *dagPtr
 
-	p := pruners.NewDefaultPruner(99, l)
-    s := splitters.NewDefaultSplitter(99, l)
+	p := pruners.NewDefaultPruner()
+    s := splitters.NewDefaultSplitter()
 
-    ui := NewUI(dag, s, p, 99, l)
+    ui := NewUI(dag, s, p)
     prunedNodes := ui.pruneNodes(
         dag.Nodes["preprocess_companies_and_employees"],
         false,
+		l,
     )
 
     const expected = 5
