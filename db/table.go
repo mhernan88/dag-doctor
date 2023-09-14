@@ -21,6 +21,7 @@ type SQLTableConstructor struct {
 	CreateTemplate string
 	DropTemplate string
 	IndexTemplates []string
+	SelectTemplate string
 }
 
 func (stc SQLTableConstructor) RenderAndExecuteCreate(db *sql.Tx) error {
@@ -71,12 +72,12 @@ func (stc SQLTableConstructor) RenderAndExecuteIndex(db *sql.Tx) error {
 		indexQuery := strings.Builder{}
 		compiledIndexTmpl, err := template.New("sql").Parse(indexTemplate)
 		if err != nil {
-			return fmt.Errorf("failed to initialize index template: %v", err)
+			return fmt.Errorf("failed to initialize index template | %v", err)
 		}
 
 		err = compiledIndexTmpl.Execute(&indexQuery, stc.Table)
 		if err != nil {
-			return fmt.Errorf("failed to render index template: %v", err)
+			return fmt.Errorf("failed to render index template | %v", err)
 		}
 
 		_, err = db.Exec(indexQuery.String())
@@ -89,6 +90,29 @@ func (stc SQLTableConstructor) RenderAndExecuteIndex(db *sql.Tx) error {
 		}
 	}
 	return nil
+}
+
+func (stc SQLTableConstructor) RenderAndExecuteSelect(db *sql.Tx) (*sql.Rows, error) {
+	selectQuery := strings.Builder{}
+	compiledSelectTmpl, err := template.New("sql").Parse(stc.SelectTemplate)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize select template | %v", err)
+	}
+
+	err = compiledSelectTmpl.Execute(&selectQuery, stc.Table)
+	if err != nil {
+		return nil, fmt.Errorf("failed to render select template | %v", err)
+	}
+
+	rows, err := db.Query(selectQuery.String())
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to execute select query: %s | %v",
+			selectQuery.String(),
+			err,
+		)
+	}
+	return rows, nil
 }
 
 func (stc SQLTableConstructor) RenderAndExecute(db *sql.Tx, drop bool) error {

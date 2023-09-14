@@ -1,17 +1,12 @@
 package db
 
-import (
-	"database/sql"
-	"fmt"
-)
-
 const DROP_TABLE_TEMPLATE = "DROP TABLE IF EXISTS {{.Name}}"
 
-func CreateSessionsTable(dbHandle *sql.Tx, drop bool) error {
+func getSessionsTableConfig() SQLTableConstructor {
 	sessionsTable := SQLTable{
 		Name: "sessions",
 	}
-	constructor := SQLTableConstructor{
+	return SQLTableConstructor{
 		Table: sessionsTable,
 		CreateTemplate:  `
 		CREATE TABLE IF NOT EXISTS {{.Name}} (
@@ -26,20 +21,17 @@ func CreateSessionsTable(dbHandle *sql.Tx, drop bool) error {
 			ON {{.Name}}(status)
 			`,
 		},
+		SelectTemplate: `
+		SELECT * FROM {{.Name}}
+		`,
 	}
-
-	err := constructor.RenderAndExecute(dbHandle, drop)
-	if err != nil {
-		return fmt.Errorf("failed to RenderAndExecute sessions table | %v", err)
-	}
-	return nil
 }
 
-func CreateNodesTable(dbHandle *sql.Tx, drop bool) error {
+func getNodesTableConfig() SQLTableConstructor {
 	nodesTable := SQLTable{
 		Name: "nodes",
 	}
-	constructor := SQLTableConstructor{
+	return SQLTableConstructor{
 		Table: nodesTable,
 		CreateTemplate: `
 		CREATE TABLE IF NOT EXISTS {{.Name}} (
@@ -62,21 +54,18 @@ func CreateNodesTable(dbHandle *sql.Tx, drop bool) error {
 			`,
 
 		},
+		SelectTemplate: `
+		SELECT * FROM {{.Name}}
+		`,
 	}
-
-	err := constructor.RenderAndExecute(dbHandle, drop)
-	if err != nil {
-		return fmt.Errorf("failed to RenderAndExecute nodes table | %v", err)
-	}
-	return nil
 }
 
-func CreateNodesMappingTable(dbHandle *sql.Tx, drop bool) error {
+func getNodesMappingTableConfig() SQLTableConstructor {
 	nodesMappingTable := SQLTable{
 		Name: "nodes_mapping",
 		Fk1: "nodes",
 	}
-	constructor := SQLTableConstructor{
+	return SQLTableConstructor{
 		Table: nodesMappingTable,
 		CreateTemplate: `
 		CREATE TABLE IF NOT EXISTS {{.Name}} (
@@ -100,19 +89,17 @@ func CreateNodesMappingTable(dbHandle *sql.Tx, drop bool) error {
 			ON {{.Name}}(node, relative)
 			`,
 		},
+		SelectTemplate: `
+		SELECT * FROM {{.Name}}
+		`,
 	}
-	err := constructor.RenderAndExecute(dbHandle, drop)
-	if err != nil {
-		return fmt.Errorf("failed to RenderAndExecute nodes_mapping table | %v", err)
-	}
-	return nil
 }
 
-func CreateIterationsTable(dbHandle *sql.Tx, drop bool) error {
+func getIterationsTableConfig() SQLTableConstructor{
 	iterationsTable := SQLTable{
 		Name: "iterations",
 	}
-	constructor := SQLTableConstructor{
+	return SQLTableConstructor{
 		Table: iterationsTable,
 		CreateTemplate: `
 		CREATE TABLE IF NOT EXISTS {{.Name}} (
@@ -138,44 +125,8 @@ func CreateIterationsTable(dbHandle *sql.Tx, drop bool) error {
 			`,
 
 		},
+		SelectTemplate: `
+		SELECT * FROM {{.Name}}
+		`,
 	}
-	err := constructor.RenderAndExecute(dbHandle, drop)
-	if err != nil {
-		return fmt.Errorf("failed to RenderAndExecute iterations table | %v", err)
-	}
-	return nil
-}
-
-func CreateTables(dbHandle *sql.DB, drop bool) error {
-	var err error
-	var tx *sql.Tx
-
-	tx, err = dbHandle.Begin()
-	if err != nil {
-		return err
-	}
-	err = CreateSessionsTable(tx, drop)
-	if err != nil {
-		return err
-	}
-
-	err = CreateNodesTable(tx, drop)
-	if err != nil {
-		return err
-	}
-	err = CreateNodesMappingTable(tx, drop)
-	if err != nil {
-		return err
-	}
-	err = CreateIterationsTable(tx, drop)
-	if err != nil {
-		return err
-	}
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
-
-
-	return nil
 }
