@@ -158,22 +158,8 @@ func CreateTables(dbHandle *sql.DB, drop bool) error {
 	if err != nil {
 		return err
 	}
-	tx.Commit()
 
-	tx, err = dbHandle.Begin()
-	if err != nil {
-		return err
-	}
 	err = CreateNodesTable(tx, drop)
-	if err != nil {
-		return err
-	}
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
-
-	tx, err = dbHandle.Begin()
 	if err != nil {
 		return err
 	}
