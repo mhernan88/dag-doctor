@@ -1,18 +1,15 @@
 package telemetry
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
-	"time"
-	"encoding/json"
 	"os"
+	"time"
 
+	"github.com/mhernan88/dag-bisect/shared"
 	"github.com/urfave/cli/v2"
 )
-
-const configFolder = "~/.config/dag_doctor"
-var logFilename = fmt.Sprintf("%s/log.json", configFolder)
-var optFilename = fmt.Sprintf("%s/opt.json", configFolder)
 
 type TelemetryStatus struct {
 	Opt string `json:"opt"`
@@ -25,16 +22,15 @@ func Opt(ctx *cli.Context) error {
 		fmt.Println("ERROR: opt must be followed by either 'in' or 'out'")
 	}
 
-	if _, err := os.Stat(configFolder); os.IsNotExist(err) {
-		os.MkdirAll(configFolder, os.ModePerm)
-		fmt.Println("created '~/.config/dag_doctor' folder.")
-	}
-
 	opts := slog.HandlerOptions{
 		AddSource: true,
 		Level: slog.LevelDebug,
 	}
 
+	logFilename, err := shared.GetLogFilename()
+	if err != nil {
+		return err
+	}
 	logfile, err := os.OpenFile(logFilename, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 	if err != nil {
 		slog.Error("error opening log file", err)
@@ -42,6 +38,10 @@ func Opt(ctx *cli.Context) error {
 	defer logfile.Close()
 	l := slog.New(slog.NewJSONHandler(logfile, &opts))
 
+	optFilename, err := shared.GetOptFilename()
+	if err != nil {
+		return err
+	}
 	f, err := os.OpenFile(optFilename, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 	if err != nil {
 		l.Error("error opening opt file", err)

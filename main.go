@@ -6,9 +6,11 @@ import (
 	"os"
 
 	"github.com/mhernan88/dag-bisect/cmd"
+	"github.com/mhernan88/dag-bisect/cmd/sessions"
 	"github.com/mhernan88/dag-bisect/cmd/telemetry"
 	"github.com/mhernan88/dag-bisect/data"
 	"github.com/mhernan88/dag-bisect/pruners"
+	"github.com/mhernan88/dag-bisect/shared"
 	"github.com/mhernan88/dag-bisect/splitters"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -97,6 +99,16 @@ func action(c *cli.Context) error {
 }
 
 func main() {
+	configFolder, err := shared.GetConfigFolder()
+	if err != nil {
+		os.Exit(1)
+	}
+
+	if _, err := os.Stat(configFolder); os.IsNotExist(err) {
+		os.MkdirAll(configFolder, os.ModePerm)
+		fmt.Println("created '~/.config/dag_doctor' folder.")
+	}
+
 	app := &cli.App{
 		Name:   "DAG Bisect",
 		Usage:  "Recursively bisect a DAG to quickly locate data errors",
@@ -104,10 +116,11 @@ func main() {
 		Action: action,
 		Commands: []*cli.Command{
 			&telemetry.OptCmd,
+			&sessions.SessionsCmd,
 		},
 	}
 
-	err := app.Run(os.Args)
+	err = app.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)
 	}
