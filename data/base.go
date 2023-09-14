@@ -172,16 +172,6 @@ func (d *DAG) ReconcileInputsAndOutputsWithNodes() int {
     return len(deletedInputsAndOutputs.ToSlice())
 }
 
-// Returns whether dag is reconciled, labels (inputs/outputs) not in nodes, and nodes not in labels (inputs/outputs).
-func (d *DAG) IsReconciled() (bool, []string, []string) {
-	labels := d.CompileInputsAndOutputs()
-	names := mapset.NewSetFromMapKeys[string](d.Nodes)
-
-	labelsAndNotNodes := labels.Difference(names).ToSlice()
-	NodesAndNotLabels := names.Difference(labels).ToSlice()
-	return len(labels.SymmetricDifference(names).ToSlice()) == 0, labelsAndNotNodes, NodesAndNotLabels
-}
-
 func (d *DAG) Slice() ([]string, []Node) {
 	return SliceMap(d.Nodes)
 }

@@ -15,6 +15,10 @@ type DefaultPruner struct {
 	Name string `json:"name"`
 }
 
+func (p DefaultPruner) GetName() string {
+	return p.Name
+}
+
 // Finds all nodes that can be pruned before `source`
 // assuming `source` is error-free.
 func (p DefaultPruner) findUpstreamPruneableNodes(

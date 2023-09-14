@@ -3,9 +3,9 @@ package splitters
 import (
 	"fmt"
 	"math"
+	"log/slog"
 
 	"github.com/mhernan88/dag-bisect/data"
-	"github.com/sirupsen/logrus"
 )
 
 func NewDefaultSplitter() DefaultSplitter {
@@ -18,12 +18,15 @@ type DefaultSplitter struct {
 	Name string `json:"default"`
 }
 
+func (s DefaultSplitter) GetName() string {
+	return s.Name
+}
+
 func (s DefaultSplitter) FindCandidate(
 	dag data.DAG, 
-	l *logrus.Logger,
+	l *slog.Logger,
 ) (data.Node, error) {
 	l.Debug("selecting best split candidate")
-	l.Tracef("options: %v", dag.SliceKeys())
 	var candidate data.Node
 	var candidateFound bool
 	var bestScore = math.Inf(-1)
@@ -57,17 +60,13 @@ func (s DefaultSplitter) FindCandidate(
 			return data.Node{}, fmt.Errorf("failed to pull node %s from map", key)
 		}
 
-		l.Tracef("popped node %s from queue", nd.Name)
-
 		numAncestors := len(dag.Ancestors(key))
 		numDescendants := len(dag.Descendants(key))
 
-		l.Tracef("calculating node %s split score", nd.Name)
 		diff := math.Abs(float64(numAncestors - numDescendants))
 		mean := float64(numAncestors+numDescendants) / 2
 		score := mean - diff
 
-		l.Tracef("node '%s' has split score: %f", key, score)
 		if score > bestScore {
 			bestScore = score
 			candidate = nd
@@ -75,7 +74,6 @@ func (s DefaultSplitter) FindCandidate(
 		}
 
 		for _, child := range nd.Next {
-			l.Tracef("adding node %s child (%s) to stack", nd.Name, child)
 			if child == "" {
 				return data.Node{}, fmt.Errorf(
 					"node '%s' child had corrupt name",
@@ -97,6 +95,10 @@ func (s DefaultSplitter) FindCandidate(
 	if candidateFound == false {
 		return data.Node{}, fmt.Errorf("failed to select a split candidate")
 	}
-	l.Debugf("selected candidate '%s' has best split score: %f", candidate.Name, bestScore)
+	l.Debug(
+		"selected candidate has best split score", 
+		"candidate", candidate.Name, 
+		"score", bestScore,
+	)
 	return candidate, nil
 }
