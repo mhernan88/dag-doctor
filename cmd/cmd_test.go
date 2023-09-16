@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"os"
 	"testing"
 
 	"github.com/mhernan88/dag-bisect/data"
@@ -36,4 +37,6 @@ func TestSaveState(t *testing.T) {
 	if newUI.DAG.Nodes == nil {
 		t.Error("dag nodes was nil!")
 	}
+
+	os.Remove("test.json")
 }
