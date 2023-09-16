@@ -9,7 +9,7 @@ import (
 )
 
 func TestSaveState(t *testing.T) {
-	dag, err := data.LoadDAG("dag.json")
+	dag, err := data.LoadDAG("../dag.json")
 	if err != nil {
 		t.Error(err)
 	}
