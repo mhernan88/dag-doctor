@@ -2,12 +2,13 @@ package db
 
 import (
 	"testing"
-	"database/sql"
+
 	_ "github.com/glebarez/go-sqlite"
+	"github.com/jmoiron/sqlx"
 )
 
 func TestCreateTables(t *testing.T) {
-	db, err := sql.Open("sqlite", ":memory:")
+	db, err := sqlx.Open("sqlite", ":memory:")
 	if err != nil {
 		t.Error(err)
 	}

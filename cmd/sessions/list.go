@@ -15,7 +15,7 @@ func list(ctx *cli.Context) error {
 		return err
 	}
 
-	tx, err := dbHandle.Begin()
+	tx, err := dbHandle.Beginx()
 	if err != nil {
 		return err
 	}

@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"strings"
 	"text/template"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/mhernan88/dag-bisect/db/models"
 )
 
 type SQLTable struct {
@@ -93,7 +96,7 @@ func (stc SQLTableConstructor) RenderAndExecuteIndex(db *sql.Tx) error {
 	return nil
 }
 
-func (stc SQLTableConstructor) RenderAndExecuteSelect(db *sql.Tx) (*sql.Rows, error) {
+func (stc SQLTableConstructor) RenderAndExecuteSelect(db *sqlx.Tx) ([]models.Session, error) {
 	selectQuery := strings.Builder{}
 	compiledSelectTmpl, err := template.New("sql").Parse(stc.SelectTemplate)
 	if err != nil {
@@ -105,36 +108,16 @@ func (stc SQLTableConstructor) RenderAndExecuteSelect(db *sql.Tx) (*sql.Rows, er
 		return nil, fmt.Errorf("failed to render select template | %v", err)
 	}
 
-	rows, err := db.Query(selectQuery.String())
+	var sessions []models.Session
+	err = db.Select(&sessions, selectQuery.String())
 	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to execute select query: %s | %v",
-			selectQuery.String(),
-			err,
-		)
+		return nil, err
 	}
-	return rows, nil
+	return sessions, nil
 }
 
-func (stc SQLTableConstructor) RenderAndExecuteInsertOne(db *sql.Tx) error {
-	insertQuery := strings.Builder{}
-	compiledInsertTmpl, err := template.New("sql").Parse(stc.InsertOneTemplate)
-	if err != nil {
-		return fmt.Errorf("failed to render insert one template | %v", err)
-	}
-
-	_, err = db.Exec(insertQuery.String())
-	if err != nil {
-		return fmt.Errorf(
-			"failed to execute insert query: %s | %v",
-			insertQuery.String(),
-			err,
-		)
-	}
-	return nil
-}
-
-func (stc SQLTableConstructor) RenderAndExecute(db *sql.Tx, drop bool) error {
+func (stc SQLTableConstructor) RenderAndExecute(
+	db *sql.Tx, drop bool) error {
 	var err error
 	if drop {
 		err = stc.RenderAndExecuteDrop(db)
@@ -149,4 +132,29 @@ func (stc SQLTableConstructor) RenderAndExecute(db *sql.Tx, drop bool) error {
 	}
 
 	return stc.RenderAndExecuteIndex(db)
+}
+
+func (stc SQLTableConstructor) RenderAndInsertSession(
+	db *sqlx.Tx, id string, status string,
+) error {
+	insertQuery := strings.Builder{}
+	compiledInsertTmpl, err := template.New("sql").Parse(stc.InsertOneTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to initialize insert one template | %v", err)
+	}
+
+	err = compiledInsertTmpl.Execute(&insertQuery, stc.Table)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(insertQuery.String(), id, status)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to execute insert query: %s | %v",
+			insertQuery.String(),
+			err,
+		)
+	}
+	return nil
 }

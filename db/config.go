@@ -10,7 +10,7 @@ func getSessionsTableConfig() SQLTableConstructor {
 		Table: sessionsTable,
 		CreateTemplate:  `
 		CREATE TABLE IF NOT EXISTS {{.Name}} (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id VARCHAR(36),
 			status VARCHAR(50)
 		)
 		`,
@@ -24,21 +24,25 @@ func getSessionsTableConfig() SQLTableConstructor {
 		SelectTemplate: `
 		SELECT * FROM {{.Name}}
 		`,
+		InsertOneTemplate: `
+		INSERT INTO {{.Name}} (id, status) VALUES(?, ?)
+		`,
 	}
 }
 
 func getNodesTableConfig() SQLTableConstructor {
 	nodesTable := SQLTable{
 		Name: "nodes",
+		Fk1: "sessions",
 	}
 	return SQLTableConstructor{
 		Table: nodesTable,
 		CreateTemplate: `
 		CREATE TABLE IF NOT EXISTS {{.Name}} (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			session INTEGER,
+			session VARCHAR(36),
 			status VARCHAR(50),
-			FOREIGN KEY(session) REFERENCES sessions(id)
+			FOREIGN KEY(session) REFERENCES {{.Fk1}}(id)
 		)
 		`,
 		DropTemplate: DROP_TABLE_TEMPLATE,
@@ -98,18 +102,20 @@ func getNodesMappingTableConfig() SQLTableConstructor {
 func getIterationsTableConfig() SQLTableConstructor{
 	iterationsTable := SQLTable{
 		Name: "iterations",
+		Fk1: "sessions",
+		Fk2: "nodes",
 	}
 	return SQLTableConstructor{
 		Table: iterationsTable,
 		CreateTemplate: `
 		CREATE TABLE IF NOT EXISTS {{.Name}} (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			session INTEGER,
+			session VARCHAR(36),
 			evaluated_node INTEGER,
 			status VARCHAR(50),
 			pruned_nodes VARCHAR,
-			FOREIGN KEY(session) REFERENCES sessions(id),
-			FOREIGN KEY(evaluated_node) REFERENCES nodes(id)
+			FOREIGN KEY(session) REFERENCES {{.Fk1}}(id),
+			FOREIGN KEY(evaluated_node) REFERENCES {{.Fk2}}(id)
 		)
 		`,
 		DropTemplate: DROP_TABLE_TEMPLATE,

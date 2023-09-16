@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/jmoiron/sqlx"
 )
 
 func CreateSessionsTable(dbHandle *sql.Tx, drop bool) error {
@@ -41,7 +43,7 @@ func CreateIterationsTable(dbHandle *sql.Tx, drop bool) error {
 	return nil
 }
 
-func CreateTables(dbHandle *sql.DB, drop bool) error {
+func CreateTables(dbHandle *sqlx.DB, drop bool) error {
 	var err error
 	var tx *sql.Tx
 
