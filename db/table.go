@@ -22,6 +22,7 @@ type SQLTableConstructor struct {
 	DropTemplate string
 	IndexTemplates []string
 	SelectTemplate string
+	InsertOneTemplate string
 }
 
 func (stc SQLTableConstructor) RenderAndExecuteCreate(db *sql.Tx) error {
@@ -113,6 +114,24 @@ func (stc SQLTableConstructor) RenderAndExecuteSelect(db *sql.Tx) (*sql.Rows, er
 		)
 	}
 	return rows, nil
+}
+
+func (stc SQLTableConstructor) RenderAndExecuteInsertOne(db *sql.Tx) error {
+	insertQuery := strings.Builder{}
+	compiledInsertTmpl, err := template.New("sql").Parse(stc.InsertOneTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to render insert one template | %v", err)
+	}
+
+	_, err = db.Exec(insertQuery.String())
+	if err != nil {
+		return fmt.Errorf(
+			"failed to execute insert query: %s | %v",
+			insertQuery.String(),
+			err,
+		)
+	}
+	return nil
 }
 
 func (stc SQLTableConstructor) RenderAndExecute(db *sql.Tx, drop bool) error {
