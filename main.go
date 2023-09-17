@@ -10,6 +10,7 @@ import (
 	"github.com/mhernan88/dag-bisect/cmd/sessions"
 	"github.com/mhernan88/dag-bisect/cmd/telemetry"
 	"github.com/mhernan88/dag-bisect/data"
+	"github.com/mhernan88/dag-bisect/db"
 	"github.com/mhernan88/dag-bisect/pruners"
 	"github.com/mhernan88/dag-bisect/shared"
 	"github.com/mhernan88/dag-bisect/splitters"
@@ -19,31 +20,11 @@ import (
 const version = "v0.1.0"
 
 var flags = []cli.Flag{
-	&cli.BoolFlag{
-		Name:  "v",
-		Value: false,
-		Usage: "verbose - info level",
-	},
-	&cli.BoolFlag{
-		Name:  "vv",
-		Value: false,
-		Usage: "verbose - debug level",
-	},
-	&cli.BoolFlag{
-		Name:  "vvv",
-		Value: false,
-		Usage: "verbose - trace level",
-	},
 	&cli.StringFlag{
 		Name:    "dag",
 		Aliases: []string{"d"},
 		Value:   "dag.json",
 		Usage:   "filename of serialized dag",
-	},
-	&cli.IntFlag{
-		Name:  "iteration_limit",
-		Value: 99,
-		Usage: "maximum iteration/recursion depth",
 	},
 }
 
@@ -69,17 +50,22 @@ func action(c *cli.Context) error {
 	l.Debug("initializing pruner")
 	pruner := pruners.NewDefaultPruner()
 
+	l.Debug("initializing database")
+	dbHandle, err := db.Connect()
+	if err != nil {
+		return err
+	}
+	db.CreateTables(dbHandle, false)
+
 	l.Debug("loading dag")
 	dag, err := data.LoadDAG(c.String("dag"))
 	if err != nil {
 		return err
 	}
-	if dag == nil {
-		return fmt.Errorf("dag wil nil")
-	}
+
 	l.Info("loaded root nodes (+ additional child nodes) from dag", "n", len(dag.Nodes))
 	if len(dag.Nodes) == 0 {
-		return fmt.Errorf("failed to load dag")
+		return fmt.Errorf("loaded an empty dag!")
 	}
 
 	ui := cmd.NewUI(*dag, splitter, pruner)
