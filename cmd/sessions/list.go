@@ -2,178 +2,147 @@ package sessions
 
 import (
 	"fmt"
+	"log/slog"
 	"slices"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/jedib0t/go-pretty/v6/list"
 	"github.com/jmoiron/sqlx"
 	"github.com/mhernan88/dag-bisect/db"
 	"github.com/mhernan88/dag-bisect/db/models"
+	"github.com/mhernan88/dag-bisect/shared"
 	"github.com/urfave/cli/v2"
 )
 
-func demoPrint(title string, content string, prefix string) {
-	fmt.Printf("%s:\n", title)
-	fmt.Println(strings.Repeat("-", len(title)+1))
-	for _, line := range strings.Split(content, "\n") {
-		fmt.Printf("%s%s\n", prefix, line)
+func NewListSessionsManager(cxn *sqlx.DB, l *slog.Logger) ListSessionsManager {
+	return ListSessionsManager{
+		cxn: cxn,
+		l: l,
 	}
-	fmt.Println()
 }
 
-func requestAndRenderTreeBranch(
-	l list.Writer, 
-	status string, 
-	dbHandle *sqlx.DB,
-) (list.Writer, error) {
+type ListSessionsManager struct {
+	cxn *sqlx.DB
+	l *slog.Logger
+}
+
+
+func (lsm ListSessionsManager) QuerySessionsByStatus(
+	status string,
+) ( []models.Session, error ) {
 	var sessions []models.Session
 
-	err := dbHandle.Select(
-		&sessions,
-		fmt.Sprintf("SELECT * FROM sessions WHERE status = '%s'", status),
+	query := fmt.Sprintf("SELECT * FROM sessions WHERE status = '%s'", status)
+	lsm.l.Debug("executing select query", "table", "sessions", "query", query)
+
+	err := lsm.cxn.Select(
+		&sessions, query,
 	)
 	if err != nil {
-		return nil, err
+		lsm.l.Error("failed select from sessions", "err", err)
+		return nil, fmt.Errorf("failed select from sessions | %v", err)
 	}
+	return sessions, nil
+}
 
-	if len(sessions) == 0 {
-		fmt.Printf("%s : no sessions\n", status)
-		return l, nil
+func (lsm ListSessionsManager) QuerySessions(
+	statuses []string,
+) (map[string][]models.Session, error) {
+	output := make(map[string][]models.Session)
+	for _, status := range statuses {
+		sessions, err := lsm.QuerySessionsByStatus(status)
+		if err != nil {
+			fmt.Printf("failed to query sessions from local database")
+			lsm.l.Error("failed to query sessions from local database", "err", err)
+		}
+
+		if len(sessions) == 0 {
+			continue
+		}
+
+		output[status] = sessions
 	}
+	return output, nil
+}
 
-	fmt.Printf("%s : rendering for %d sessions\n", status, len(sessions))
 
+func (lsm ListSessionsManager) RenderTreeBranch(
+	l list.Writer, 
+	sessions []models.Session,
+	status string,
+) (list.Writer, error) {
 	l.AppendItem(status)
 	l.Indent()
 
-	slices.SortFunc(sessions, func(a models.Session, b models.Session) int {
-		if a.MetaUpdatedDatetime > b.MetaUpdatedDatetime {
-			return 1
-		} else if a.MetaUpdatedDatetime < b.MetaUpdatedDatetime {
-			return -1
-		} else {
-			return 0
-		}
-	})
-
+	lsm.l.Debug("rendering sessions", "status", status, "n", len(sessions))
+	slices.SortFunc(sessions, models.SessionUpdateSortFunc)
 	for _, session := range(sessions) {
-		updatedUnixTimestamp := fmt.Sprintf("%d", session.MetaUpdatedDatetime)
-		i, err := strconv.ParseInt(updatedUnixTimestamp, 10, 64)
+		updatedUnixTimestamp, err := session.PrettyUpdated()
 		if err != nil {
 			return nil, err
 		}
-		tm := time.Unix(i, 0)
-
-		createdUnixTimestamp := fmt.Sprintf("%d", session.MetaCreatedDatetime)
-		j, err := strconv.ParseInt(createdUnixTimestamp, 10, 64)
+		createdUnixTimestamp, err := session.PrettyCreated()
 		if err != nil {
 			return nil, err
 		}
-		tm2 := time.Unix(j, 0)
 
 		l.AppendItem(fmt.Sprintf("Session %s", session.ID))
 		l.Indent()
-		l.AppendItem(fmt.Sprintf("Updated: %s", tm))
-		l.AppendItem(fmt.Sprintf("Created: %s", tm2))
+		l.AppendItem(fmt.Sprintf("Updated: %s", updatedUnixTimestamp))
+		l.AppendItem(fmt.Sprintf("Created: %s", createdUnixTimestamp))
 		l.UnIndent()
 	}
 
 	l.UnIndent()
-
 	return l, nil
 }
 
-func renderSessionsTree(dbHandle *sqlx.DB) error {
+func (lsm ListSessionsManager) RenderTree(
+	allSessions map[string][]models.Session,
+) error {
 	l := list.NewWriter()
 	lTemp := list.List{}
 	lTemp.Render()
 
-	// sessionIDs := make(map[string][]string)
-	// for _, status := 
-
 	var err error
-	for _, status := range []string{"new", "in-progress", "ok", "err"} {
-		l, err = requestAndRenderTreeBranch(l, status, dbHandle)
+	for _, status := range models.SESSION_STATUSES {
+		sessionGroup, ok := allSessions[status]
+		if !ok {
+			continue
+		}
+
+		l, err = lsm.RenderTreeBranch(l, sessionGroup, status)
 		if err != nil {
 			return err
 		}
 	}
 
-
-	// l.AppendItems([]interface{}{"Winter", "Is", "Coming"})
-	// l.Indent()
-	// l.AppendItems([]interface{}{"This", "Is", "Known"})
-	// l.UnIndent()
-	// l.UnIndent()
-	// l.AppendItem("The Dark Tower")
-	// l.Indent()
-	// l.AppendItem("The Gunslinger")
-	//
 	l.SetStyle(list.StyleConnectedRounded)
-	demoPrint("Sessions", l.Render(), "")
+	shared.PrintTree("Sessions", l.Render())
 	return nil
-}
-
-func requestSessions(dbHandle *sqlx.DB, statusFilter string) ([]models.Session, error) {
-	var err error
-	var sessions []models.Session
-	if statusFilter == "" {
-		err = dbHandle.Select(
-			&sessions,
-			`SELECT * FROM sessions WHERE status != 'closed'`)
-	} else if statusFilter == "all" {
-		fmt.Println("filtering to all sessions")
-		err = dbHandle.Select(
-			&sessions,
-			`SELECT * FROM sessions WHERE status = 'all'`,
-		)
-	} else {
-		fmt.Printf("filtering to sessions with status = '%s'\n", statusFilter)
-		err = dbHandle.Select(
-			&sessions,
-			`SELECT * FROM sessions WHERE status = '?'`,
-			statusFilter)
-	}
-	if err != nil {
-		return nil, err
-	}
-	return sessions, nil
 }
 
 func listSessions(ctx *cli.Context) error {
-	dbHandle, err := db.Connect()
+	l, f := shared.GetLogger()
+	defer f.Close()
+	cxn, err := db.Connect()
 	if err != nil {
 		return err
 	}
 
-	statusFilter := ctx.String("status")
-	sessions, err := requestSessions(dbHandle, statusFilter)
+	lsm := NewListSessionsManager(cxn, l)
+	allSessions, err := lsm.QuerySessions(models.SESSION_STATUSES)
 	if err != nil {
-		return err
+		l.Error(
+			"listSessions command failed to query sessions",
+			"err", err)
+		return fmt.Errorf("failed to query sessions | %v", err)
 	}
 
-	err = renderSessionsTree(dbHandle)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(sessions)
-	return nil
-}
-
-var listFlags = []cli.Flag{
-	&cli.StringFlag{
-		Name: "status",
-		Value: "",
-		Usage: "session status filter",
-	},
+	return lsm.RenderTree(allSessions)
 }
 
 var ListSessionsCmd = cli.Command {
 	Name: "ls",
 	Usage: "list sessions",
 	Action: listSessions,
-	Flags: listFlags, 
 }
