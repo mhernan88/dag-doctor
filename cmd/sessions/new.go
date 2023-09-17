@@ -2,6 +2,7 @@ package sessions
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/mhernan88/dag-bisect/data"
@@ -22,12 +23,18 @@ func newSession(ctx *cli.Context) error {
 	defer dbHandle.Close()
 
 	id := uuid.NewString()
+	dt := time.Now().Unix()
 	_, err = dbHandle.Exec(
-		`INSERT INTO sessions (id, status) VALUES (?, ?)`, 
-		id, "new",
+		`INSERT INTO sessions (
+			id, 
+			status, 
+			meta_created_datetime, 
+			meta_updated_datetime
+		) VALUES (?, ?, ?, ?)`, 
+		id, "new", dt, dt,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to insert new session | %v", err)
 	}
 
 	fmt.Printf("created session %s\n", id)

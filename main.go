@@ -50,12 +50,6 @@ func action(c *cli.Context) error {
 	l.Debug("initializing pruner")
 	pruner := pruners.NewDefaultPruner()
 
-	l.Debug("initializing database")
-	dbHandle, err := db.Connect()
-	if err != nil {
-		return err
-	}
-	db.CreateTables(dbHandle, false)
 
 	l.Debug("loading dag")
 	dag, err := data.LoadDAG(c.String("dag"))
@@ -82,6 +76,16 @@ func main() {
 		os.MkdirAll(configFolder, os.ModePerm)
 		fmt.Println("created '~/.config/dag_doctor' folder.")
 	}
+
+	dbHandle, err := db.Connect()
+	if err != nil {
+		os.Exit(1)
+	}
+	err = db.CreateTables(dbHandle, false)
+	if err != nil {
+		os.Exit(1)
+	}
+	defer dbHandle.Close()
 
 	app := &cli.App{
 		Name:   "DAG Bisect",

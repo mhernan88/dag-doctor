@@ -6,7 +6,7 @@ var SessionsCmd = cli.Command{
 	Name: "session",
 	Usage: "session commands",
 	Subcommands: []*cli.Command{
-		&ListCmd,
+		&ListSessionsCmd,
 		&NewSessionCmd,
 	},
 }

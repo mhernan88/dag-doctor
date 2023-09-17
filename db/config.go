@@ -11,7 +11,9 @@ func getSessionsTableConfig() SQLTableConstructor {
 		CreateTemplate:  `
 		CREATE TABLE IF NOT EXISTS {{.Name}} (
 			id VARCHAR(36),
-			status VARCHAR(50)
+			status VARCHAR(50),
+			meta_created_datetime BIGINT,
+			meta_updated_datetime BIGINT
 		)
 		`,
 		DropTemplate: DROP_TABLE_TEMPLATE,
@@ -19,6 +21,14 @@ func getSessionsTableConfig() SQLTableConstructor {
 			`
 			CREATE INDEX IF NOT EXISTS {{.Name}}_status_index
 			ON {{.Name}}(status)
+			`,
+			`
+			CREATE INDEX IF NOT EXISTS {{.Name}}_status_index
+			ON {{.Name}}(meta_created_datetime)
+			`,
+			`
+			CREATE INDEX IF NOT EXISTS {{.Name}}_status_index
+			ON {{.Name}}(meta_updated_datetime)
 			`,
 		},
 		SelectTemplate: `
