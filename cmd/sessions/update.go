@@ -37,7 +37,6 @@ func updateSession(ctx *cli.Context) error {
 	)
 
 	_, err = cxn.Exec(query, status, id)
-
 	if err != nil {
 		return fmt.Errorf("failed to update session | %v", err)
 	}
