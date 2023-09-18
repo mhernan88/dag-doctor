@@ -2,23 +2,31 @@ package sessions
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/mhernan88/dag-bisect/db"
+	"github.com/mhernan88/dag-bisect/db/models"
 	"github.com/urfave/cli/v2"
 )
 
 func updateSession(ctx *cli.Context) error {
+	id := ctx.Args().Get(0)
+	status := ctx.Args().Get(1)
+
+	if !slices.Contains(models.SESSION_STATUSES, status) {
+		sessionStatuses := strings.Join(models.SESSION_STATUSES, ", ")
+		return fmt.Errorf("status must be one of: %s", sessionStatuses)
+	}
+
 	cxn, err := db.Connect()
 	if err != nil {
 		return err
 	}
 	defer cxn.Close()
 
-	id := ctx.Args().Get(0)
-	status := ctx.Args().Get(1)
 	dt := time.Now().Unix()
-
 	query := fmt.Sprintf(
 		`UPDATE sessions
 		SET 

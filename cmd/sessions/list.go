@@ -70,7 +70,8 @@ func (lsm ListSessionsManager) RenderTreeBranch(
 	sessions []models.Session,
 	status string,
 ) (list.Writer, error) {
-	l.AppendItem(status)
+	statusEmoji := models.SESSION_LOGOS[status]
+	l.AppendItem(fmt.Sprintf("%v %s", statusEmoji, status))
 	l.Indent()
 
 	lsm.l.Debug("rendering sessions", "status", status, "n", len(sessions))

@@ -4,10 +4,20 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/enescakir/emoji"
 )
 
 var SESSION_STATUSES = []string{
-	"new", "in-progress", "ok", "err",
+	"new", "in-progress", "ok", "err", "cancelled",
+}
+
+var SESSION_LOGOS = map[string]emoji.Emoji{
+	"new": emoji.WhiteCircle,
+	"in-progress": emoji.BlueCircle,
+	"ok": emoji.GreenCircle,
+	"err": emoji.RedCircle,
+	"cancelled": emoji.BlackCircle,
 }
 
 func SessionUpdateSortFunc(a Session, b Session) int {
@@ -48,3 +58,5 @@ func (s Session) PrettyCreated() (time.Time, error) {
 		return time.Unix(i, 0), nil
 
 }
+
+
