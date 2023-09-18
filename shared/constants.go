@@ -36,3 +36,11 @@ func GetDBFilename() (string, error) {
 	}
 	return filepath.Join(configFolder, "data.db"), nil
 }
+
+func GetDAGFolder() (string, error) {
+	configFolder, err := GetConfigFolder()
+	if err != nil {
+		return "", nil
+	}
+	return filepath.Join(configFolder, "dags"), nil
+}

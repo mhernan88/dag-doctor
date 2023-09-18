@@ -51,7 +51,7 @@ func (lsm ListSessionsManager) QuerySessions(
 	for _, status := range statuses {
 		sessions, err := lsm.QuerySessionsByStatus(status)
 		if err != nil {
-			fmt.Printf("failed to query sessions from local database")
+			fmt.Printf("failed to query sessions (where status='%s') from local database | %v\n", status, err)
 			lsm.l.Error("failed to query sessions from local database", "err", err)
 		}
 
@@ -87,6 +87,8 @@ func (lsm ListSessionsManager) RenderTreeBranch(
 
 		l.AppendItem(fmt.Sprintf("Session %s", session.ID))
 		l.Indent()
+		l.AppendItem(fmt.Sprintf("Splits: %d", session.Splits))
+		l.AppendItem(fmt.Sprintf("DAG File: %s", session.File))
 		l.AppendItem(fmt.Sprintf("Updated: %s", updatedUnixTimestamp))
 		l.AppendItem(fmt.Sprintf("Created: %s", createdUnixTimestamp))
 		l.UnIndent()
@@ -143,6 +145,6 @@ func listSessions(ctx *cli.Context) error {
 
 var ListSessionsCmd = cli.Command {
 	Name: "ls",
-	Usage: "list sessions",
+	Usage: "list all sessions: usage -> ...session ls",
 	Action: listSessions,
 }

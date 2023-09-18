@@ -11,6 +11,8 @@ func getSessionsTableConfig() SQLTableConstructor {
 		CreateTemplate:  `
 		CREATE TABLE IF NOT EXISTS {{.Name}} (
 			id VARCHAR(36),
+			file VARCHAR(255),
+			splits INT,
 			status VARCHAR(50),
 			meta_created_datetime BIGINT,
 			meta_updated_datetime BIGINT
