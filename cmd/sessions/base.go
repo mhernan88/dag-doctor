@@ -10,18 +10,18 @@ import (
 )
 
 
-func NewSessionManager(cxn *sqlx.DB, l *slog.Logger, f *os.File) SessionManager {
-	return SessionManager{cxn: cxn, l: l, f: f}
+func NewSessionManager(cxn *sqlx.DB, l *slog.Logger) SessionManager {
+	return SessionManager{cxn: cxn, l: l}
 }
 
-func NewDefaultSessionManager() (*SessionManager, error) {
+func NewDefaultSessionManager() (*SessionManager, *os.File, error) {
 	l, f := shared.GetLogger()
 	cxn, err := db.Connect()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	sm := NewSessionManager(cxn, l, f)
-	return &sm, nil
+	sm := NewSessionManager(cxn, l)
+	return &sm, f, nil
 }
 
 type SessionManager struct {

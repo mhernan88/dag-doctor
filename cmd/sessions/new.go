@@ -5,30 +5,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/mhernan88/dag-bisect/data"
-	"github.com/mhernan88/dag-bisect/db"
 	"github.com/mhernan88/dag-bisect/shared"
 	"github.com/urfave/cli/v2"
 )
 
-func newSession(ctx *cli.Context) error {
-	dagFilename := ctx.Args().Get(0)
-	_, err := data.LoadDAG(dagFilename)
-	if err != nil {
-		return err
-	}
-
-	cxn, err := db.Connect()
-	if err != nil {
-		return err
-	}
-	defer cxn.Close()
-
-	id := uuid.NewString()
+func (sm SessionManager) insertSession(id, savedDagFilename string) error {
 	dt := time.Now().Unix()
-	savedDagFilename, err := shared.CopyDAGToRepo(dagFilename, id)
-
-	_, err = cxn.Exec(
+	_, err := sm.cxn.Exec(
 		`INSERT INTO sessions (
 			id, 
 			file,
@@ -42,14 +25,40 @@ func newSession(ctx *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to insert new session | %v", err)
 	}
+	return nil
+}
+
+func newSession(dagFilename string) error {
+	sm, f, err := NewDefaultSessionManager()
+	if err != nil {
+		sm.l.Error(
+			"listSessins command failed to create session manager",
+			"err", err)
+		return fmt.Errorf("failed to create session manager | %v", err)
+	}
+	defer f.Close()
+
+	id := uuid.NewString()
+	savedDagFilename, err := shared.CopyDAGToRepo(dagFilename, id)
+	if err != nil {
+		return fmt.Errorf("failed to copy dag to repo | %v", err)
+	}
+
+	err = sm.insertSession(id, savedDagFilename)
+	if err != nil {
+		return fmt.Errorf("failed to insert into sessions table | %v", err)
+	}
 
 	fmt.Printf("created session %s\n", id)
 	return nil
 }
 
+func newSessionFunc(ctx *cli.Context) error {
+	return newSession(ctx.Args().Get(0))
+}
 
 var NewSessionCmd = cli.Command {
 	Name: "new",
 	Usage: "creates a new session: usage -> ...session new <dag-filename>",
-	Action: newSession,
+	Action: newSessionFunc,
 }

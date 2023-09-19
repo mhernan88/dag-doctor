@@ -74,7 +74,7 @@ func main() {
 
 	if _, err := os.Stat(configFolder); os.IsNotExist(err) {
 		os.MkdirAll(configFolder, os.ModePerm)
-		fmt.Println("created '~/.config/dag_doctor' folder.")
+		fmt.Printf("created '%s' folder.\n", configFolder)
 	}
 
 	dbHandle, err := db.Connect()

@@ -2,57 +2,44 @@ package sessions
 
 import (
 	"fmt"
-	"log/slog"
 	"slices"
 
 	"github.com/jedib0t/go-pretty/v6/list"
-	"github.com/jmoiron/sqlx"
-	"github.com/mhernan88/dag-bisect/db"
 	"github.com/mhernan88/dag-bisect/db/models"
 	"github.com/mhernan88/dag-bisect/shared"
 	"github.com/urfave/cli/v2"
 )
 
-func NewListSessionsManager(cxn *sqlx.DB, l *slog.Logger) ListSessionsManager {
-	return ListSessionsManager{
-		cxn: cxn,
-		l: l,
-	}
-}
 
-type ListSessionsManager struct {
-	cxn *sqlx.DB
-	l *slog.Logger
-}
-
-
-func (lsm ListSessionsManager) QuerySessionsByStatus(
+// Queries sessions from sqlite db filtering to a given status.
+func (sm SessionManager) QuerySessionsByStatus(
 	status string,
-) ( []models.Session, error ) {
+) ([]models.Session, error) {
 	var sessions []models.Session
 
 	query := fmt.Sprintf("SELECT * FROM sessions WHERE status = '%s'", status)
-	lsm.l.Debug("executing select query", "table", "sessions", "query", query)
+	sm.l.Debug("executing select query", "table", "sessions", "query", query)
 
-	err := lsm.cxn.Select(
+	err := sm.cxn.Select(
 		&sessions, query,
 	)
 	if err != nil {
-		lsm.l.Error("failed select from sessions", "err", err)
+		sm.l.Error("failed select from sessions", "err", err)
 		return nil, fmt.Errorf("failed select from sessions | %v", err)
 	}
 	return sessions, nil
 }
 
-func (lsm ListSessionsManager) QuerySessions(
+// Queries sessions from sqlite db for a list of statuses.
+func (sm SessionManager) QuerySessions(
 	statuses []string,
 ) (map[string][]models.Session, error) {
 	output := make(map[string][]models.Session)
 	for _, status := range statuses {
-		sessions, err := lsm.QuerySessionsByStatus(status)
+		sessions, err := sm.QuerySessionsByStatus(status)
 		if err != nil {
 			fmt.Printf("failed to query sessions (where status='%s') from local database | %v\n", status, err)
-			lsm.l.Error("failed to query sessions from local database", "err", err)
+			sm.l.Error("failed to query sessions from local database", "err", err)
 		}
 
 		if len(sessions) == 0 {
@@ -64,8 +51,8 @@ func (lsm ListSessionsManager) QuerySessions(
 	return output, nil
 }
 
-
-func (lsm ListSessionsManager) RenderTreeBranch(
+// Renders a part of a tree for a given status (and associated sessions).
+func (sm SessionManager) RenderTreeBranch(
 	l list.Writer, 
 	sessions []models.Session,
 	status string,
@@ -74,7 +61,7 @@ func (lsm ListSessionsManager) RenderTreeBranch(
 	l.AppendItem(fmt.Sprintf("%v %s", statusEmoji, status))
 	l.Indent()
 
-	lsm.l.Debug("rendering sessions", "status", status, "n", len(sessions))
+	sm.l.Debug("rendering sessions", "status", status, "n", len(sessions))
 	slices.SortFunc(sessions, models.SessionUpdateSortFunc)
 	for _, session := range(sessions) {
 		updatedUnixTimestamp, err := session.PrettyUpdated()
@@ -99,7 +86,8 @@ func (lsm ListSessionsManager) RenderTreeBranch(
 	return l, nil
 }
 
-func (lsm ListSessionsManager) RenderTree(
+// Renders a full tree for a map of different statuses / sessions.
+func (sm SessionManager) RenderTree(
 	allSessions map[string][]models.Session,
 ) error {
 	l := list.NewWriter()
@@ -113,7 +101,7 @@ func (lsm ListSessionsManager) RenderTree(
 			continue
 		}
 
-		l, err = lsm.RenderTreeBranch(l, sessionGroup, status)
+		l, err = sm.RenderTreeBranch(l, sessionGroup, status)
 		if err != nil {
 			return err
 		}
@@ -124,28 +112,37 @@ func (lsm ListSessionsManager) RenderTree(
 	return nil
 }
 
-func listSessions(ctx *cli.Context) error {
-	l, f := shared.GetLogger()
-	defer f.Close()
-	cxn, err := db.Connect()
+// Wrapper of multiple SessionManager methods to list all sessions grouped
+// by status.
+func listSessions() error {
+	sm, f, err := NewDefaultSessionManager()
 	if err != nil {
-		return err
+		sm.l.Error(
+			"listSessins command failed to create session manager",
+			"err", err)
+		return fmt.Errorf("failed to create session manager | %v", err)
 	}
+	defer f.Close()
 
-	lsm := NewListSessionsManager(cxn, l)
-	allSessions, err := lsm.QuerySessions(models.SESSION_STATUSES)
+	allSessions, err := sm.QuerySessions(models.SESSION_STATUSES)
 	if err != nil {
-		l.Error(
+		sm.l.Error(
 			"listSessions command failed to query sessions",
 			"err", err)
 		return fmt.Errorf("failed to query sessions | %v", err)
 	}
 
-	return lsm.RenderTree(allSessions)
+	return sm.RenderTree(allSessions)
+}
+
+// Wrapper of listSessions() for urfave.
+func listSessionsFunc(ctx *cli.Context) error {
+	return listSessions()
 }
 
 var ListSessionsCmd = cli.Command {
-	Name: "ls",
+	Name: "list",
+	Aliases: []string{"ls"},
 	Usage: "list all sessions: usage -> ...session ls",
-	Action: listSessions,
+	Action: listSessionsFunc,
 }

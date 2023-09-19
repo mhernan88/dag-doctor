@@ -20,5 +20,5 @@ type IterSessionManager struct {
 }
 
 func iterSession(ctx *cli.Context) error {
-
+	return nil
 }
