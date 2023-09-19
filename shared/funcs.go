@@ -21,7 +21,7 @@ func CopyDAGToRepo(dagFilename string, dagID string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to acquire dag folder | %v", err)
 	}
-	os.MkdirAll(folder, 0666)
+	os.MkdirAll(folder, 0777)
 
 	fileContents, err := os.ReadFile(dagFilename)
 	if err != nil {
@@ -29,5 +29,9 @@ func CopyDAGToRepo(dagFilename string, dagID string) (string, error) {
 	}
 	
 	outputFilename := filepath.Join(folder, fmt.Sprintf("%s.json", dagID))
-	return outputFilename, os.WriteFile(outputFilename, fileContents, 0666)
+	err = os.WriteFile(outputFilename, fileContents, 0666)
+	if err != nil {
+		return "", fmt.Errorf("failed to write dag | %v", err)
+	}
+	return outputFilename, nil
 }

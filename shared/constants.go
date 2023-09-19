@@ -10,7 +10,7 @@ func GetConfigFolder() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(homeFolder, "dag_doctor"), nil
+	return filepath.Join(homeFolder, ".config", "dag_doctor"), nil
 }
 
 func GetLogFilename() (string, error) {
