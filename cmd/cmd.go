@@ -25,8 +25,8 @@ func NewDefaultUI(
 
 func NewUI(
 	dag data.DAG,
-	splitter splitters.Splitter,
-	pruner pruners.Pruner,
+	splitter splitters.DefaultSplitter,
+	pruner pruners.DefaultPruner,
 ) UI {
 	return UI{
 		DAG:            dag,
@@ -39,15 +39,14 @@ func NewUI(
 }
 
 func SaveState(filename string, ui UI) error {
-	f, err := os.OpenFile(filename, os.O_CREATE | os.O_APPEND | os.O_WRONLY, 0666)
+	f, err := os.OpenFile(filename, os.O_CREATE | os.O_TRUNC | os.O_WRONLY, 0666)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
 	encoder := json.NewEncoder(f)
-	encoder.Encode(ui)
-	return nil
+	return encoder.Encode(ui)
 }
 
 func LoadState(filename string) (*UI, error) {
@@ -59,7 +58,10 @@ func LoadState(filename string) (*UI, error) {
 
 	var ui UI
 	decoder := json.NewDecoder(f)
-	decoder.Decode(&ui)
+	err = decoder.Decode(&ui)
+	if err != nil {
+		return nil, err
+	}
 	return &ui, nil
 }
 
@@ -68,8 +70,8 @@ type UI struct {
 	OKNodes        map[string]data.Node `json:"ok_nodes"`
 	ERRNodes       map[string]data.Node `json:"err_nodes"`
 	LastFailedNode string `json:"last_failed_node"`
-	Splitter       splitters.Splitter `json:"splitter"`
-	Pruner         pruners.Pruner `json:"pruner"`
+	Splitter       splitters.DefaultSplitter `json:"splitter"`
+	Pruner         pruners.DefaultPruner `json:"pruner"`
 }
 
 func (ui *UI) Run(l *slog.Logger) error {

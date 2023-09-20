@@ -124,6 +124,6 @@ func (sm SessionManager) IncrementSessionSplits(ID string) error {
 		return fmt.Errorf("failed to update session | %v", err)
 	}
 
-	fmt.Printf("incremented session '%s' splits")
+	fmt.Printf("incremented session '%s' splits\n", ID)
 	return nil
 }

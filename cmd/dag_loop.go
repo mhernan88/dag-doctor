@@ -23,8 +23,11 @@ func (ui *UI) Terminate() {
 	}
 }
 
-// FIXME: Getting panic() 2 lines down
 func (ui *UI) CheckDAGIter(l *slog.Logger) error {
+	fmt.Println("DAG")
+	fmt.Println(ui.DAG)
+	fmt.Println("ERR")
+	fmt.Println(ui.ERRNodes)
 	node, err := ui.Splitter.FindCandidate(ui.DAG, l)
 	if err != nil {
 		return err

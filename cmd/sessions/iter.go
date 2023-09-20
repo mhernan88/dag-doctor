@@ -14,10 +14,16 @@ func (sm SessionManager) iterSession(ID string) error{
 		return fmt.Errorf("failed to query session by id | %v", err)
 	}
 
+	fmt.Printf("loading %s", sessionModel.State)
 	ui, err := cmd.LoadState(sessionModel.State)
 	if err != nil {
 		return fmt.Errorf("failed to load state | %v", err)
 	}
+	fmt.Println("DAG OG")
+	fmt.Println(ui.DAG.Nodes)
+	fmt.Println("ERR OG")
+	fmt.Println(ui.ERRNodes)
+
 
 	err = ui.CheckDAGIter(sm.l)
 	if err != nil {
@@ -43,7 +49,11 @@ func (sm SessionManager) iterSession(ID string) error{
 			}
 		}
 	} else {
-		fmt.Printf("successfully iterate session %s\n", ID)
+		err = cmd.SaveState(sessionModel.State, *ui)
+		if err != nil {
+			return fmt.Errorf("failed to save state | %v", err)
+		}
+		fmt.Printf("successfully iterated session %s\n", ID)
 	}
 	return nil
 }

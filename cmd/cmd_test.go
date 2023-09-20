@@ -27,11 +27,13 @@ func TestSaveState(t *testing.T) {
 	err = SaveState("test.json", ui)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
 	newUI, err := LoadState("test.json")
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
 	if newUI.DAG.Nodes == nil {
