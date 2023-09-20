@@ -8,7 +8,7 @@ import (
 	"github.com/mhernan88/dag-bisect/data"
 )
 
-func (ui *UI) terminate() {
+func (ui *UI) Terminate() {
 	if ui.LastFailedNode == "" {
 		fmt.Printf(
 			"%v dag ok\n",
@@ -21,6 +21,30 @@ func (ui *UI) terminate() {
 			ui.LastFailedNode,
 		)
 	}
+}
+
+// FIXME: Getting panic() 2 lines down
+func (ui *UI) CheckDAGIter(l *slog.Logger) error {
+	node, err := ui.Splitter.FindCandidate(ui.DAG, l)
+	if err != nil {
+		return err
+	}
+
+	l.Debug("selected split candidate", "candidate", node.Name)
+
+	prunedNodes, err := ui.CheckNode(node, l)
+	if err != nil {
+		return err
+	}
+
+	l.Debug(
+		"completed pruning nodes",
+		"pruned nodes", data.SliceMapKeys(prunedNodes),
+		"ok nodes", len(ui.OKNodes),
+		"err nodes", len(ui.ERRNodes),
+		"remaining nodes", len(ui.DAG.Nodes),
+	)
+	return nil
 }
 
 func (ui *UI) CheckDAG(l *slog.Logger) error {
@@ -53,6 +77,6 @@ func (ui *UI) CheckDAG(l *slog.Logger) error {
 
 	// Automatically terminates on the last-viewed node.
 	// Not necessarily the error node (esp if the last node was OK)
-	ui.terminate()
+	ui.Terminate()
 	return nil
 }

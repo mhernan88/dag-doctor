@@ -10,26 +10,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-
-// Queries sessions from sqlite db filtering to a given status.
-func (sm SessionManager) QuerySessionsByStatus(
-	status string,
-) ([]models.Session, error) {
-	var sessions []models.Session
-
-	query := fmt.Sprintf("SELECT * FROM sessions WHERE status = '%s'", status)
-	sm.l.Debug("executing select query", "table", "sessions", "query", query)
-
-	err := sm.cxn.Select(
-		&sessions, query,
-	)
-	if err != nil {
-		sm.l.Error("failed select from sessions", "err", err)
-		return nil, fmt.Errorf("failed select from sessions | %v", err)
-	}
-	return sessions, nil
-}
-
 // Queries sessions from sqlite db for a list of statuses.
 func (sm SessionManager) QuerySessions(
 	statuses []string,
@@ -76,7 +56,7 @@ func (sm SessionManager) RenderTreeBranch(
 		l.AppendItem(fmt.Sprintf("Session %s", session.ID))
 		l.Indent()
 		l.AppendItem(fmt.Sprintf("Splits: %d", session.Splits))
-		l.AppendItem(fmt.Sprintf("DAG File: %s", session.DAG))
+		l.AppendItem(fmt.Sprintf("Original DAG File: %s", session.DAG))
 		l.AppendItem(fmt.Sprintf("State File: %s", session.State))
 		l.AppendItem(fmt.Sprintf("Updated: %s", updatedUnixTimestamp))
 		l.AppendItem(fmt.Sprintf("Created: %s", createdUnixTimestamp))
