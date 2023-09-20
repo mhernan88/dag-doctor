@@ -32,7 +32,8 @@ func SessionUpdateSortFunc(a Session, b Session) int {
 
 type Session struct {
 	ID string `db:"id"`
-	File string `db:"file"`
+	State string `db:"state"`
+	DAG string `db:"dag"`
 	Splits int `db:"splits"`
 	Status string `db:"status"`
 	MetaCreatedDatetime int64 `db:"meta_created_datetime"`

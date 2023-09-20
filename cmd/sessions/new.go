@@ -5,22 +5,25 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mhernan88/dag-bisect/cmd"
+	"github.com/mhernan88/dag-bisect/data"
 	"github.com/mhernan88/dag-bisect/shared"
 	"github.com/urfave/cli/v2"
 )
 
-func (sm SessionManager) insertSession(id, savedDagFilename string) error {
+func (sm SessionManager) insertSession(id, savedDagFilename, savedSessionFilename string) error {
 	dt := time.Now().Unix()
 	_, err := sm.cxn.Exec(
 		`INSERT INTO sessions (
 			id, 
-			file,
+			dag,
+			state,
 			splits,
 			status, 
 			meta_created_datetime, 
 			meta_updated_datetime
 		) VALUES (?, ?, 0, ?, ?, ?)`, 
-		id, savedDagFilename, "new", dt, dt,
+		id, savedDagFilename, savedSessionFilename, "new", dt, dt,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to insert new session | %v", err)
@@ -38,13 +41,22 @@ func newSession(dagFilename string) error {
 	}
 	defer f.Close()
 
+	dag, err := data.LoadDAG(dagFilename)
+	if err != nil {
+		return fmt.Errorf("failed to load dag | %v", err)
+	}
+
+	ui := cmd.NewDefaultUI(*dag)
+	cmd.SaveState(sessionFilename, ui)
+	fmt.Printf("initialized session at %s\n", sessionFilename)
+
 	id := uuid.NewString()
 	savedDagFilename, err := shared.CopyDAGToRepo(dagFilename, id)
 	if err != nil {
 		return fmt.Errorf("failed to copy dag to repo | %v", err)
 	}
 
-	err = sm.insertSession(id, savedDagFilename)
+	err = sm.insertSession(id, savedDagFilename, sessionFilename)
 	if err != nil {
 		return fmt.Errorf("failed to insert into sessions table | %v", err)
 	}

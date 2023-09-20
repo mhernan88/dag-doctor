@@ -44,3 +44,11 @@ func GetDAGFolder() (string, error) {
 	}
 	return filepath.Join(configFolder, "dags"), nil
 }
+
+func GetStateFolder() (string, error) {
+	configFolder, err := GetConfigFolder()
+	if err != nil {
+		return "", nil
+	}
+	return filepath.Join(configFolder, "state"), nil
+}

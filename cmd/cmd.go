@@ -10,6 +10,19 @@ import (
 	"github.com/mhernan88/dag-bisect/splitters"
 )
 
+func NewDefaultUI(
+	dag data.DAG,
+) UI {
+	return UI{
+		DAG:            dag,
+		OKNodes:        make(map[string]data.Node),
+		ERRNodes:       make(map[string]data.Node),
+		LastFailedNode: "",
+		Splitter:       splitters.NewDefaultSplitter(),
+		Pruner:         pruners.NewDefaultPruner(),
+	}
+}
+
 func NewUI(
 	dag data.DAG,
 	splitter splitters.Splitter,
