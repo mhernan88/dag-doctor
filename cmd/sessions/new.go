@@ -22,7 +22,7 @@ func (sm SessionManager) insertSession(id, savedDagFilename, savedSessionFilenam
 			status, 
 			meta_created_datetime, 
 			meta_updated_datetime
-		) VALUES (?, ?, 0, ?, ?, ?)`, 
+		) VALUES (?, ?, ?, 0, ?, ?, ?)`, 
 		id, savedDagFilename, savedSessionFilename, "new", dt, dt,
 	)
 	if err != nil {
@@ -47,7 +47,10 @@ func newSession(dagFilename string) error {
 	}
 
 	ui := cmd.NewDefaultUI(*dag)
-	cmd.SaveState(sessionFilename, ui)
+	sessionFilename, err := shared.SaveStateToRepo(ui)
+	if err != nil {
+		return fmt.Errorf("failed to save state | %v", err)
+	}
 	fmt.Printf("initialized session at %s\n", sessionFilename)
 
 	id := uuid.NewString()

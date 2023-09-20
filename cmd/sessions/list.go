@@ -77,6 +77,7 @@ func (sm SessionManager) RenderTreeBranch(
 		l.Indent()
 		l.AppendItem(fmt.Sprintf("Splits: %d", session.Splits))
 		l.AppendItem(fmt.Sprintf("DAG File: %s", session.DAG))
+		l.AppendItem(fmt.Sprintf("State File: %s", session.State))
 		l.AppendItem(fmt.Sprintf("Updated: %s", updatedUnixTimestamp))
 		l.AppendItem(fmt.Sprintf("Created: %s", createdUnixTimestamp))
 		l.UnIndent()
