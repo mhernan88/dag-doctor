@@ -102,7 +102,7 @@ func (sm SessionManager) UpdateSessionStatus(ID, status string) error {
 	return nil
 }
 
-func (sm SessionManager) IncrementSessionSplits(ID string) error {
+func (sm SessionManager) IncrementSessionSplits(ID string, n int) error {
 	cxn, err := db.Connect()
 	if err != nil {
 		return err
@@ -113,10 +113,10 @@ func (sm SessionManager) IncrementSessionSplits(ID string) error {
 	query := fmt.Sprintf(
 		`UPDATE sessions
 		SET 
-			splits = splits + 1, 
+			splits = splits + %d, 
 			meta_updated_datetime = '%d' 
 		WHERE id = '%s'`,
-		dt, ID,
+		n, dt, ID,
 	)
 
 	_, err = cxn.Exec(query)

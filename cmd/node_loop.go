@@ -8,17 +8,14 @@ import (
 	"github.com/mhernan88/dag-bisect/data"
 )
 
-func (ui *UI) checkDatasets(node data.Node, l *slog.Logger) (bool, error) {
+func (ui *UI) checkDatasets(node data.Node, l *slog.Logger) (string, error) {
 	for _, output := range node.Outputs {
-		ok, err := ui.CheckDataset(output, l)
-		if err != nil {
-			return false, err
-		}
-		if !ok {
-            return false, nil
+		status, err := ui.CheckDataset(output, l)
+		if (err != nil) || (status == "err") || (status == "aborted") {
+			return status, err
 		}
 	}
-    return true, nil
+    return "ok", nil
 }
 
 func (ui *UI) pruneNodes(
@@ -51,10 +48,19 @@ func (ui *UI) pruneNodes(
 
 func (ui *UI) CheckNode(node data.Node, l *slog.Logger) (map[string]data.Node, error) {
 	fmt.Printf("|-> %v inspecting node: %s\n", emoji.Microscope, node.Name)
-    allDatasetsOK, err := ui.checkDatasets(node, l)
-    if err != nil {
+    datasetStatus, err := ui.checkDatasets(node, l)
+
+	var allDatasetsOK bool
+    if (err != nil) || (datasetStatus == "aborted") {
         return nil, err
-    }
+    } else if datasetStatus == "ok" {
+		allDatasetsOK = true
+	} else if datasetStatus == "err" {
+		allDatasetsOK = false
+	} else {
+		return nil, fmt.Errorf("invalid dataset status")
+	}
+
     prunedNodes := ui.pruneNodes(node, allDatasetsOK, l)
     return prunedNodes, nil
 }

@@ -76,7 +76,7 @@ type UI struct {
 
 func (ui *UI) Run(l *slog.Logger) error {
 	l.Debug("running ui loop")
-	err := ui.CheckDAG(l)
+	_, err := ui.CheckDAG(l)
 	if err != nil {
 		return err
 	}

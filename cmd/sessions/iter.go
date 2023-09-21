@@ -19,46 +19,19 @@ func (sm SessionManager) iterSession(ID string) error{
 	if err != nil {
 		return fmt.Errorf("failed to load state | %v", err)
 	}
-	fmt.Println("DAG OG")
-	fmt.Println(ui.DAG.Nodes)
-	fmt.Println("ERR OG")
-	fmt.Println(ui.ERRNodes)
 
-
-	err = ui.CheckDAGIter(sm.l)
+	_, err = ui.CheckDAGIter(sm.l)
 	if err != nil {
 		return fmt.Errorf("failed to evaluate dag | %v", err)
 	}
 
-	err = sm.IncrementSessionSplits(ID)
+	err = sm.IncrementSessionSplits(ID, 1)
 	if err != nil {
 		return fmt.Errorf("failed to increment splits | %v", err)
 	}
 
-	if (len(ui.DAG.Nodes) == 0) || (len(ui.DAG.Roots) == 0) {
-		ui.Terminate()
-		if ui.LastFailedNode == "" {
-			err = sm.UpdateSessionStatus(ID, "ok")
-			if err != nil {
-				return fmt.Errorf("failed to update session status | %v", err)
-			}
-		} else {
-			err = sm.UpdateSessionStatus(ID, "err")
-			if err != nil {
-				return fmt.Errorf("failed to update session status | %v", err)
-			}
-		}
-	} else {
-		err = cmd.SaveState(sessionModel.State, *ui)
-		if err != nil {
-			return fmt.Errorf("failed to save state | %v", err)
-		}
-		fmt.Printf("successfully iterated session %s\n", ID)
-	}
-	return nil
+	return sm.cleanup(ID, sessionModel, ui)
 }
-
-
 
 func iterSession(ID string) error {
 	sm, f, err := NewDefaultSessionManager()
