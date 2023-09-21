@@ -12,6 +12,7 @@ var SessionsDevCmd = cli.Command{
 
 var SessionsCmd = cli.Command{
 	Name: "session",
+	Aliases: []string{"sess"},
 	Usage: "session commands",
 	Subcommands: []*cli.Command{
 		&ActivateSessionCmd,
