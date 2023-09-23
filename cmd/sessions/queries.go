@@ -43,6 +43,11 @@ func (sm SessionManager) QuerySessionByID(
 		return nil, fmt.Errorf("failed select from sessions | %v", err)
 	}
 
+	if len(sessions) == 0 {
+		sm.l.Error("select from sessions by id yielded no results")
+		return nil, fmt.Errorf("select from sessions by id yielded no results")
+	}
+
 	if len(sessions) > 1 {
 		sm.l.Error(
 			"ambiguous select from sessions (expected 1)",
