@@ -15,6 +15,7 @@ func getSessionsTableConfig() SQLTableConstructor {
 			state VARCHAR,
 			splits INT,
 			status VARCHAR(50),
+			err_node VARCHAR,
 			meta_created_datetime BIGINT,
 			meta_updated_datetime BIGINT
 		)

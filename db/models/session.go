@@ -36,6 +36,7 @@ type Session struct {
 	DAG string `db:"dag"`
 	Splits int `db:"splits"`
 	Status string `db:"status"`
+	ErrNode *string `db:"err_node"`
 	MetaCreatedDatetime int64 `db:"meta_created_datetime"`
 	MetaUpdatedDatetime int64 `db:"meta_updated_datetime"`
 }

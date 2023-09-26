@@ -11,6 +11,7 @@ func (sm SessionManager) cleanup(ID string, sess *models.Session, ui *cmd.UI) er
 	var err error
 	if (len(ui.DAG.Nodes) == 0) || (len(ui.DAG.Roots) == 0) {
 		ui.Terminate()
+		sm.UpdateErrNode(ID, ui.LastFailedNode)
 		if ui.LastFailedNode == "" {
 			err = sm.UpdateSessionStatus(ID, "ok")
 			if err != nil {

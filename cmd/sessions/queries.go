@@ -132,3 +132,28 @@ func (sm SessionManager) IncrementSessionSplits(ID string, n int) error {
 	fmt.Printf("incremented session '%s' splits\n", ID)
 	return nil
 }
+
+func (sm SessionManager) UpdateErrNode(ID string, node string) error {
+	cxn, err := db.Connect()
+	if err != nil {
+		return err
+	}
+	defer cxn.Close()
+
+	dt := time.Now().Unix()
+	query := fmt.Sprintf(
+		`UPDATE sessions
+		SET
+			err_node = '%s',
+			meta_updated_datetime = '%d'
+		WHERE id = '%s'`,
+		node, dt, ID,
+	)
+
+	_, err = cxn.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to update err_node | %v", err)
+	}
+	fmt.Printf("update session '%s' err_node to '%s'\n", ID, node)
+	return nil
+}

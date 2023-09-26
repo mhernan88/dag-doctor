@@ -34,6 +34,10 @@ func (sm SessionManager) RenderTreeBranch(
 		l.AppendItem(fmt.Sprintf("Session %s", session.ID))
 		l.Indent()
 		l.AppendItem(fmt.Sprintf("Splits: %d", session.Splits))
+
+		if session.ErrNode != nil {
+			l.AppendItem(fmt.Sprintf("Err Node: %s", *session.ErrNode))
+		}
 		l.AppendItem(fmt.Sprintf("Original DAG File: %s", session.DAG))
 		l.AppendItem(fmt.Sprintf("State File: %s", session.State))
 		l.AppendItem(fmt.Sprintf("Updated: %s", updatedUnixTimestamp))
