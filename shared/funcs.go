@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/mhernan88/dag-bisect/cmd"
+	"github.com/mhernan88/dag-bisect/models"
 )
 
 func PrintTree(title string, content string) {
@@ -39,7 +39,7 @@ func CopyDAGToRepo(dagFilename string, dagID string) (string, error) {
 	return outputFilename, nil
 }
 
-func SaveStateToRepo(state cmd.UI) (string, error) {
+func SaveStateToRepo(state *models.State) (string, error) {
 	folder, err := GetStateFolder()
 	if err != nil {
 		return "", fmt.Errorf("failed to acquire state folder | %v", err)
@@ -47,6 +47,6 @@ func SaveStateToRepo(state cmd.UI) (string, error) {
 	os.MkdirAll(folder, 0777)
 
 	filename := filepath.Join(folder, fmt.Sprintf("%s.json", uuid.NewString()))
-	cmd.SaveState(filename, state)
+	models.SaveState(filename, state)
 	return filename, nil
 }

@@ -2,6 +2,7 @@ package splitters
 
 import (
 	"log/slog"
+
 	"github.com/mhernan88/dag-bisect/models"
 )
 

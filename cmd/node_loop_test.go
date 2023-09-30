@@ -7,7 +7,6 @@ import (
 
 	"github.com/mhernan88/dag-bisect/models"
 	"github.com/mhernan88/dag-bisect/pruners"
-	"github.com/mhernan88/dag-bisect/splitters"
 )
 
 func TestUI__PruneNodes(t *testing.T) {
@@ -21,10 +20,11 @@ func TestUI__PruneNodes(t *testing.T) {
 	dag := *dagPtr
 
 	p := pruners.NewDefaultPruner()
-    s := splitters.NewDefaultSplitter()
 
-    ui := NewUI(dag, s, p)
-    prunedNodes := ui.pruneNodes(
+    state := models.NewState(dag)
+    prunedNodes := pruneNodes(
+		state,
+		p,
         dag.Nodes["preprocess_companies_and_employees"],
         false,
 		l,

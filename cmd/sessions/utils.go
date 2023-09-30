@@ -7,12 +7,12 @@ import (
 	"github.com/mhernan88/dag-bisect/models"
 )
 
-func (sm SessionManager) cleanup(ID string, sess *models.Session, ui *cmd.UI) error {
+func (sm SessionManager) cleanup(ID string, sess *models.Session, state *models.State) error {
 	var err error
-	if (len(ui.DAG.Nodes) == 0) || (len(ui.DAG.Roots) == 0) {
-		ui.Terminate()
-		sm.UpdateErrNode(ID, ui.LastFailedNode)
-		if ui.LastFailedNode == "" {
+	if (len(state.DAG.Nodes) == 0) || (len(state.DAG.Roots) == 0) {
+		cmd.Terminate(state)
+		sm.UpdateErrNode(ID, state.LastFailedNode)
+		if state.LastFailedNode == "" {
 			err = sm.UpdateSessionStatus(ID, "ok")
 			if err != nil {
 				return fmt.Errorf("failed to update session status | %v", err)
@@ -24,7 +24,7 @@ func (sm SessionManager) cleanup(ID string, sess *models.Session, ui *cmd.UI) er
 			}
 		}
 	} else {
-		err = cmd.SaveState(sess.State, *ui)
+		err = models.SaveState(sess.State, state)
 		if err != nil {
 			return fmt.Errorf("failed to save state | %v", err)
 		}

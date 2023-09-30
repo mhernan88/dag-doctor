@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/mhernan88/dag-bisect/cmd"
 	"github.com/mhernan88/dag-bisect/models"
 	"github.com/mhernan88/dag-bisect/shared"
 	"github.com/urfave/cli/v2"
@@ -26,7 +25,7 @@ func newSession(dagFilename string) error {
 		return fmt.Errorf("failed to load dag | %v", err)
 	}
 
-	ui := cmd.NewDefaultUI(*dag)
+	ui := models.NewDefaultState(*dag)
 	sessionFilename, err := shared.SaveStateToRepo(ui)
 	if err != nil {
 		return fmt.Errorf("failed to save state | %v", err)

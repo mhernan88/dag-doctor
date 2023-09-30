@@ -8,7 +8,7 @@ import (
 	"github.com/enescakir/emoji"
 )
 
-func (ui *UI) CheckDataset(dataset string, l *slog.Logger) (string, error) {
+func CheckDataset(dataset string, l *slog.Logger) (string, error) {
 	fmt.Printf("|---> inspecting dataset: %s (c or q to exit)\n", dataset)
 	fmt.Printf("|---> open '%s' and check if content is correct...\n", dataset)
 

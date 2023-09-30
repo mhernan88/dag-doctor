@@ -6,11 +6,12 @@ import (
 
 	"github.com/enescakir/emoji"
 	"github.com/mhernan88/dag-bisect/models"
+	"github.com/mhernan88/dag-bisect/pruners"
 )
 
-func (ui *UI) checkDatasets(node models.Node, l *slog.Logger) (string, error) {
+func checkDatasets(node models.Node, l *slog.Logger) (string, error) {
 	for _, output := range node.Outputs {
-		status, err := ui.CheckDataset(output, l)
+		status, err := CheckDataset(output, l)
 		if (err != nil) || (status == "err") || (status == "aborted") {
 			return status, err
 		}
@@ -18,7 +19,9 @@ func (ui *UI) checkDatasets(node models.Node, l *slog.Logger) (string, error) {
     return "ok", nil
 }
 
-func (ui *UI) pruneNodes(
+func pruneNodes(
+	state *models.State,
+	pruner pruners.DefaultPruner,
 	node models.Node, 
 	allDatasetsOK bool,
 	l *slog.Logger,
@@ -27,28 +30,28 @@ func (ui *UI) pruneNodes(
 ) {
 	var prunedNodes map[string]models.Node
 	if allDatasetsOK {
-		ui.DAG, prunedNodes = ui.Pruner.PruneBefore(node.Name, ui.DAG, l)
+		state.DAG, prunedNodes = pruner.PruneBefore(node.Name, state.DAG, l)
         for name, node := range prunedNodes {
-            ui.OKNodes[name] = node
+            state.OKNodes[name] = node
         }
 		fmt.Printf("|-> %v node %s cleared OK\n", emoji.CheckMarkButton, node.Name)
 		fmt.Printf("|---> pruned upstream nodes: %v\n", models.SliceMapKeys(prunedNodes))
 		return prunedNodes
 	} 
 
-    ui.DAG, prunedNodes = ui.Pruner.PruneAfter(node.Name, ui.DAG, l)
+    state.DAG, prunedNodes = pruner.PruneAfter(node.Name, state.DAG, l)
     for name, node := range prunedNodes {
-        ui.ERRNodes[name] = node
+        state.ERRNodes[name] = node
     }
     fmt.Printf("|-> %v node %s has ERR\n", emoji.CrossMarkButton, node.Name)
     fmt.Printf("|---> pruned downstream nodes: %v\n", models.SliceMapKeys(prunedNodes))
-	ui.LastFailedNode = node.Name
+	state.LastFailedNode = node.Name
     return prunedNodes
 }
 
-func (ui *UI) CheckNode(node models.Node, l *slog.Logger) (map[string]models.Node, error) {
+func CheckNode(state *models.State, pruner pruners.DefaultPruner, node models.Node, l *slog.Logger) (map[string]models.Node, error) {
 	fmt.Printf("|-> %v inspecting node: %s\n", emoji.Microscope, node.Name)
-    datasetStatus, err := ui.checkDatasets(node, l)
+    datasetStatus, err := checkDatasets(node, l)
 
 	var allDatasetsOK bool
     if (err != nil) || (datasetStatus == "aborted") {
@@ -61,6 +64,6 @@ func (ui *UI) CheckNode(node models.Node, l *slog.Logger) (map[string]models.Nod
 		return nil, fmt.Errorf("invalid dataset status")
 	}
 
-    prunedNodes := ui.pruneNodes(node, allDatasetsOK, l)
+    prunedNodes := pruneNodes(state, pruner, node, allDatasetsOK, l)
     return prunedNodes, nil
 }

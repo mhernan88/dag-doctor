@@ -6,10 +6,12 @@ import (
 
 	"github.com/enescakir/emoji"
 	"github.com/mhernan88/dag-bisect/models"
+	"github.com/mhernan88/dag-bisect/pruners"
+	"github.com/mhernan88/dag-bisect/splitters"
 )
 
-func (ui *UI) Terminate() {
-	if ui.LastFailedNode == "" {
+func Terminate(state *models.State) {
+	if state.LastFailedNode == "" {
 		fmt.Printf(
 			"%v dag ok\n",
 			emoji.GrinningFace,
@@ -18,19 +20,19 @@ func (ui *UI) Terminate() {
 		fmt.Printf(
 			"%v source of error: '%s'\n",
 			emoji.Skull,
-			ui.LastFailedNode,
+			state.LastFailedNode,
 		)
 	}
 }
 
-func (ui *UI) CheckDAGIter(l *slog.Logger) (bool, error) {
-	node, err := ui.Splitter.FindCandidate(ui.DAG, l)
+func CheckDAGIter(state *models.State, pruner pruners.DefaultPruner, splitter splitters.DefaultSplitter, l *slog.Logger) (bool, error) {
+	node, err := splitter.FindCandidate(state.DAG, l)
 	if err != nil {
 		return false, err
 	}
 	l.Debug("selected split candidate", "candidate", node.Name)
 
-	prunedNodes, err := ui.CheckNode(node, l)
+	prunedNodes, err := CheckNode(state, pruner, node, l)
 	if err != nil {
 		return false, err
 	}
@@ -42,21 +44,21 @@ func (ui *UI) CheckDAGIter(l *slog.Logger) (bool, error) {
 	l.Debug(
 		"completed pruning nodes",
 		"pruned nodes", models.SliceMapKeys(prunedNodes),
-		"ok nodes", len(ui.OKNodes),
-		"err nodes", len(ui.ERRNodes),
-		"remaining nodes", len(ui.DAG.Nodes),
+		"ok nodes", len(state.OKNodes),
+		"err nodes", len(state.ERRNodes),
+		"remaining nodes", len(state.DAG.Nodes),
 	)
 	return false, nil
 }
 
-func (ui *UI) CheckDAG(l *slog.Logger) (int, error) {
+func CheckDAG(state *models.State, pruner pruners.DefaultPruner, splitter splitters.DefaultSplitter, l *slog.Logger) (int, error) {
 	fmt.Println("inspecting DAG")
 	var err error
 
 	abort := false
 	i := 0
-	for (len(ui.DAG.Nodes) > 0) && (len(ui.DAG.Roots) > 0) {
-		abort, err = ui.CheckDAGIter(l)
+	for (len(state.DAG.Nodes) > 0) && (len(state.DAG.Roots) > 0) {
+		abort, err = CheckDAGIter(state, pruner, splitter, l)
 		if err != nil {
 			return i, fmt.Errorf("failed to check dag | %v", err)
 		}

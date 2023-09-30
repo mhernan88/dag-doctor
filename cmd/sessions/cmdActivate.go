@@ -4,6 +4,9 @@ import (
 	"fmt"
 
 	"github.com/mhernan88/dag-bisect/cmd"
+	"github.com/mhernan88/dag-bisect/models"
+	"github.com/mhernan88/dag-bisect/pruners"
+	"github.com/mhernan88/dag-bisect/splitters"
 	"github.com/urfave/cli/v2"
 )
 
@@ -14,12 +17,15 @@ func (sm SessionManager) activateSession(ID string) error{
 	}
 
 	fmt.Printf("loading %s", sessionModel.State)
-	ui, err := cmd.LoadState(sessionModel.State)
+	state, err := models.LoadState(sessionModel.State)
 	if err != nil {
 		return fmt.Errorf("failed to load state | %v", err)
 	}
 
-	increments, err := ui.CheckDAG(sm.l)
+	pruner := pruners.NewDefaultPruner()
+	splitter := splitters.NewDefaultSplitter()
+
+	increments, err := cmd.CheckDAG(state, pruner, splitter, sm.l)
 	if err != nil {
 		return fmt.Errorf("failed to evaluate dag | %v", err)
 	}
@@ -29,7 +35,7 @@ func (sm SessionManager) activateSession(ID string) error{
 		return fmt.Errorf("failed to increment splits | %v", err)
 	}
 
-	return sm.cleanup(ID, sessionModel, ui)
+	return sm.cleanup(ID, sessionModel, state)
 }
 
 func activateSession(ID string) error {
