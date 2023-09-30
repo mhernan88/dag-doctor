@@ -55,7 +55,7 @@ func Opt(ctx *cli.Context) error {
 	encoder := json.NewEncoder(f)
 	encoder.Encode(telemetry)
 
-	l.Debug(fmt.Sprintf("telemetry sharing opt-%s", status))
+	l.Info(fmt.Sprintf("telemetry sharing opt-%s", status))
 	fmt.Printf("saved opt-%s status to '%s'\n", status, optFilename)
 	return nil
 }

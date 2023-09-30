@@ -3,15 +3,19 @@ package sessions
 import (
 	"fmt"
 
-	"github.com/mhernan88/dag-bisect/cmd"
+	"github.com/mhernan88/dag-bisect/resolver/interactive"
 	"github.com/mhernan88/dag-bisect/models"
-	"github.com/mhernan88/dag-bisect/pruners"
-	"github.com/mhernan88/dag-bisect/splitters"
+	"github.com/mhernan88/dag-bisect/resolver/pruners"
+	"github.com/mhernan88/dag-bisect/resolver/splitters"
 	"github.com/urfave/cli/v2"
 )
 
 
 func (sm SessionManager) iterSession(ID string) error{
+	ID, err := sm.QuerySessionIDByPartialID(ID)
+	if err != nil {
+		return fmt.Errorf("failed to enrich session id | %v", err)
+	}
 	sessionModel, err := sm.QuerySessionByID(ID)
 	if err != nil {
 		return fmt.Errorf("failed to query session by id | %v", err)
@@ -26,7 +30,7 @@ func (sm SessionManager) iterSession(ID string) error{
 	pruner := pruners.NewDefaultPruner()
 	splitter := splitters.NewDefaultSplitter()
 
-	_, err = cmd.CheckDAGIter(state, pruner, splitter, sm.l)
+	_, err = interactive.CheckDAGIter(state, pruner, splitter, sm.l)
 	if err != nil {
 		return fmt.Errorf("failed to evaluate dag | %v", err)
 	}

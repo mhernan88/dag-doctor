@@ -1,4 +1,4 @@
-package cmd
+package interactive
 
 import (
 	"fmt"
@@ -31,14 +31,14 @@ func CheckDataset(dataset string, l *slog.Logger) (string, error) {
 				"|---> %v dataset '%s' maked OK\n",
 				emoji.CheckMarkButton,
 				dataset)
-			l.Debug("input was 'y', returning true, nil")
+			l.Info("input was 'y', returning true, nil")
 			return "ok", nil
 		case 'n', 'N':
 			fmt.Printf(
 				"|---> %v dataset '%s' maked ERR\n",
 				emoji.CrossMarkButton,
 				dataset)
-			l.Debug("input was 'n', returning false, nil")
+			l.Info("input was 'n', returning false, nil")
 			return "err", nil
 		case 'c', 'C', 'q', 'Q':
 			return "aborted", nil

@@ -41,6 +41,10 @@ func listSessions(sessionID string) error {
 	defer f.Close()
 
 	if sessionID != "" {
+		sessionID, err := sm.QuerySessionIDByPartialID(sessionID)
+		if err != nil {
+			return fmt.Errorf("failed to enrich session id | %v", err)
+		}
 		session, err := sm.QuerySessionByID(sessionID)
 		if err != nil {
 			return fmt.Errorf("listSessions command failed to query session %s", sessionID)

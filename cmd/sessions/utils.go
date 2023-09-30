@@ -3,14 +3,14 @@ package sessions
 import (
 	"fmt"
 
-	"github.com/mhernan88/dag-bisect/cmd"
+	"github.com/mhernan88/dag-bisect/resolver/interactive"
 	"github.com/mhernan88/dag-bisect/models"
 )
 
 func (sm SessionManager) cleanup(ID string, sess *models.Session, state *models.State) error {
 	var err error
 	if (len(state.DAG.Nodes) == 0) || (len(state.DAG.Roots) == 0) {
-		cmd.Terminate(state)
+		interactive.Terminate(state)
 		sm.UpdateErrNode(ID, state.LastFailedNode)
 		if state.LastFailedNode == "" {
 			err = sm.UpdateSessionStatus(ID, "ok")
@@ -32,3 +32,4 @@ func (sm SessionManager) cleanup(ID string, sess *models.Session, state *models.
 	}
 	return nil
 }
+

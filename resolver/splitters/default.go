@@ -26,7 +26,7 @@ func (s DefaultSplitter) FindCandidate(
 	dag models.DAG, 
 	l *slog.Logger,
 ) (models.Node, error) {
-	l.Debug("selecting best split candidate")
+	l.Info("selecting best split candidate")
 	var candidate models.Node
 	var candidateFound bool
 	var bestScore = math.Inf(-1)
@@ -95,7 +95,7 @@ func (s DefaultSplitter) FindCandidate(
 	if candidateFound == false {
 		return models.Node{}, fmt.Errorf("failed to select a split candidate")
 	}
-	l.Debug(
+	l.Info(
 		"selected candidate has best split score", 
 		"candidate", candidate.Name, 
 		"score", bestScore,

@@ -19,7 +19,7 @@ func (sm SessionManager) RenderTreeBranch(
 	l.AppendItem(fmt.Sprintf("%v %s", statusEmoji, status))
 	l.Indent()
 
-	sm.l.Debug("rendering sessions", "status", status, "n", len(sessions))
+	sm.l.Info("rendering sessions", "status", status, "n", len(sessions))
 	slices.SortFunc(sessions, models.SessionUpdateSortFunc)
 	for _, session := range(sessions) {
 		updatedUnixTimestamp, err := session.PrettyUpdated()

@@ -49,6 +49,7 @@ var SessionsCmd = cli.Command{
 		&ListSessionsCmd,
 		&NewSessionCmd,
 		&SessionsDevCmd,
+		&CancelSessionCmd,
 	},
 }
 

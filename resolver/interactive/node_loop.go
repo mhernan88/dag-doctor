@@ -1,4 +1,4 @@
-package cmd
+package interactive
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/enescakir/emoji"
 	"github.com/mhernan88/dag-bisect/models"
-	"github.com/mhernan88/dag-bisect/pruners"
+	"github.com/mhernan88/dag-bisect/resolver/pruners"
 )
 
 func checkDatasets(node models.Node, l *slog.Logger) (string, error) {

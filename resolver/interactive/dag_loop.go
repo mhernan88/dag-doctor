@@ -1,4 +1,4 @@
-package cmd
+package interactive
 
 import (
 	"fmt"
@@ -6,8 +6,8 @@ import (
 
 	"github.com/enescakir/emoji"
 	"github.com/mhernan88/dag-bisect/models"
-	"github.com/mhernan88/dag-bisect/pruners"
-	"github.com/mhernan88/dag-bisect/splitters"
+	"github.com/mhernan88/dag-bisect/resolver/pruners"
+	"github.com/mhernan88/dag-bisect/resolver/splitters"
 )
 
 func Terminate(state *models.State) {
@@ -30,7 +30,7 @@ func CheckDAGIter(state *models.State, pruner pruners.DefaultPruner, splitter sp
 	if err != nil {
 		return false, err
 	}
-	l.Debug("selected split candidate", "candidate", node.Name)
+	l.Info("selected split candidate", "candidate", node.Name)
 
 	prunedNodes, err := CheckNode(state, pruner, node, l)
 	if err != nil {
@@ -41,7 +41,7 @@ func CheckDAGIter(state *models.State, pruner pruners.DefaultPruner, splitter sp
 		return true, nil
 	}
 
-	l.Debug(
+	l.Info(
 		"completed pruning nodes",
 		"pruned nodes", models.SliceMapKeys(prunedNodes),
 		"ok nodes", len(state.OKNodes),

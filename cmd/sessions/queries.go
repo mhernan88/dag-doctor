@@ -16,7 +16,7 @@ func (sm SessionManager) QuerySessionsByStatus(
 ) ([]models.Session, error) {
 	var sessions []models.Session
 	query := fmt.Sprintf("SELECT * FROM sessions WHERE status = '%s'", status)
-	sm.l.Debug("executing select query", "table", "sessions", "query", query)
+	sm.l.Info("executing select query", "table", "sessions", "query", query)
 
 	err := sm.cxn.Select(
 		&sessions, query,
@@ -33,7 +33,7 @@ func (sm SessionManager) QuerySessionByID(
 ) (*models.Session, error) {
 	var sessions []models.Session
 	query := fmt.Sprintf("SELECT * FROM sessions WHERE id = '%s'", ID)
-	sm.l.Debug("executing select query", "table", "sessions", "query", query)
+	sm.l.Info("executing select query", "table", "sessions", "query", query)
 
 	err := sm.cxn.Select(
 		&sessions, query,
@@ -54,6 +54,35 @@ func (sm SessionManager) QuerySessionByID(
 			"n_results", len(sessions))
 	}
 	return &sessions[0], nil
+}
+
+func (sm SessionManager) QuerySessionIDByPartialID(
+	partialID string,
+) (string, error) {
+	var ids []string
+	query := fmt.Sprintf("SELECT id FROM sessions WHERE id LIKE '%s%%'", partialID)
+	sm.l.Info("executing selct query", "table", "sessions", "query", query)
+
+	err := sm.cxn.Select(
+		&ids, query,
+	)
+	if err != nil {
+		sm.l.Error("failed to select from sessions", "err", err)
+		return "", fmt.Errorf("failed to select from sessions | %v", err)
+	}
+
+	if len(ids) == 0 {
+		sm.l.Error("select from sessions by partial id yielded no results")
+		return "", fmt.Errorf("session '%s' not found in sessions", partialID)
+	}
+
+	if len(ids) > 1 {
+		sm.l.Error(
+			"ambiguous select from sessions (expected 1)",
+			"n_results", len(ids))
+		return "", fmt.Errorf("session '%s' yielded more than 1 session", partialID)
+	}
+	return ids[0], nil
 }
 
 func (sm SessionManager) InsertSession(id, savedDagFilename, savedSessionFilename string) error {

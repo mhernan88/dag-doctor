@@ -1,4 +1,4 @@
-package cmd
+package interactive
 
 import (
 	"log/slog"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/mhernan88/dag-bisect/models"
-	"github.com/mhernan88/dag-bisect/pruners"
+	"github.com/mhernan88/dag-bisect/resolver/pruners"
 )
 
 func TestUI__PruneNodes(t *testing.T) {
