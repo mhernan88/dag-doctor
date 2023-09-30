@@ -5,18 +5,18 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/mhernan88/dag-bisect/data"
+	"github.com/mhernan88/dag-bisect/models"
 	"github.com/mhernan88/dag-bisect/pruners"
 	"github.com/mhernan88/dag-bisect/splitters"
 )
 
 func NewDefaultUI(
-	dag data.DAG,
+	dag models.DAG,
 ) UI {
 	return UI{
 		DAG:            dag,
-		OKNodes:        make(map[string]data.Node),
-		ERRNodes:       make(map[string]data.Node),
+		OKNodes:        make(map[string]models.Node),
+		ERRNodes:       make(map[string]models.Node),
 		LastFailedNode: "",
 		Splitter:       splitters.NewDefaultSplitter(),
 		Pruner:         pruners.NewDefaultPruner(),
@@ -24,14 +24,14 @@ func NewDefaultUI(
 }
 
 func NewUI(
-	dag data.DAG,
+	dag models.DAG,
 	splitter splitters.DefaultSplitter,
 	pruner pruners.DefaultPruner,
 ) UI {
 	return UI{
 		DAG:            dag,
-		OKNodes:        make(map[string]data.Node),
-		ERRNodes:       make(map[string]data.Node),
+		OKNodes:        make(map[string]models.Node),
+		ERRNodes:       make(map[string]models.Node),
 		LastFailedNode: "",
 		Splitter:       splitter,
 		Pruner:         pruner,
@@ -66,9 +66,9 @@ func LoadState(filename string) (*UI, error) {
 }
 
 type UI struct {
-	DAG data.DAG `json:"dag"`
-	OKNodes        map[string]data.Node `json:"ok_nodes"`
-	ERRNodes       map[string]data.Node `json:"err_nodes"`
+	DAG models.DAG `json:"dag"`
+	OKNodes        map[string]models.Node `json:"ok_nodes"`
+	ERRNodes       map[string]models.Node `json:"err_nodes"`
 	LastFailedNode string `json:"last_failed_node"`
 	Splitter       splitters.DefaultSplitter `json:"splitter"`
 	Pruner         pruners.DefaultPruner `json:"pruner"`

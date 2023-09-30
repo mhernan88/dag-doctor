@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mhernan88/dag-bisect/data"
+	"github.com/mhernan88/dag-bisect/models"
 	"github.com/mhernan88/dag-bisect/pruners"
 	"github.com/mhernan88/dag-bisect/splitters"
 )
@@ -13,7 +13,7 @@ import (
 func TestUI__PruneNodes(t *testing.T) {
 	l := slog.Default()
 
-	dagPtr, err := data.LoadDAG("../dag.json")
+	dagPtr, err := models.LoadDAG("../dag.json")
 	if err != nil {
 		t.Error(err)
 		return
@@ -33,7 +33,7 @@ func TestUI__PruneNodes(t *testing.T) {
     const expected = 5
     if len(prunedNodes) != expected {
         t.Errorf("prunedNodes; want=%d, got=%d", expected, len(prunedNodes))
-        prunedNodesString := data.SliceMapKeys(prunedNodes)
+        prunedNodesString := models.SliceMapKeys(prunedNodes)
         prunedNodesFormattedString := strings.Join(prunedNodesString, "\n- ")
         t.Logf("Nodes:\n- %v", prunedNodesFormattedString)
         return

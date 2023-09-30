@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jedib0t/go-pretty/v6/list"
-	"github.com/mhernan88/dag-bisect/db/models"
+	"github.com/mhernan88/dag-bisect/models"
 	"github.com/mhernan88/dag-bisect/shared"
 )
 

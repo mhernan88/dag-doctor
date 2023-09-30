@@ -4,13 +4,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mhernan88/dag-bisect/data"
+	"github.com/mhernan88/dag-bisect/models"
 	"github.com/mhernan88/dag-bisect/pruners"
 	"github.com/mhernan88/dag-bisect/splitters"
 )
 
 func TestSaveState(t *testing.T) {
-	dag, err := data.LoadDAG("../dag.json")
+	dag, err := models.LoadDAG("../dag.json")
 	if err != nil {
 		t.Error(err)
 	}

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/mhernan88/dag-bisect/db"
-	"github.com/mhernan88/dag-bisect/db/models"
+	"github.com/mhernan88/dag-bisect/models"
 )
 
 // Queries sessions from sqlite db filtering to a given status.

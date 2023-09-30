@@ -3,7 +3,7 @@ package pruners
 import (
 	"log/slog"
 
-	"github.com/mhernan88/dag-bisect/data"
+	"github.com/mhernan88/dag-bisect/models"
 )
 
 func NewDefaultPruner() DefaultPruner {
@@ -24,16 +24,16 @@ func (p DefaultPruner) GetName() string {
 // assuming `source` is error-free.
 func (p DefaultPruner) findUpstreamPruneableNodes(
 	node string,
-	dag data.DAG,
+	dag models.DAG,
 	l *slog.Logger,
-) map[string]data.Node {
+) map[string]models.Node {
 	if len(dag.Nodes[node].Prev) == 0 {
-		return make(map[string]data.Node)
+		return make(map[string]models.Node)
 	}
 
 	ancestorsMap := dag.Ancestors(node)
 
-	pruneableAncestorsMap := make(map[string]data.Node)
+	pruneableAncestorsMap := make(map[string]models.Node)
 	for ancestorName, ancestor := range ancestorsMap {
 		isPruneable := true
 		for _, childName := range ancestor.Next {
@@ -55,9 +55,9 @@ func (p DefaultPruner) findUpstreamPruneableNodes(
 
 func (p DefaultPruner) PruneBefore(
 	node string,
-	dag data.DAG,
+	dag models.DAG,
 	l *slog.Logger,
-) (data.DAG, map[string]data.Node) {
+) (models.DAG, map[string]models.Node) {
 	pruneableNodes := p.findUpstreamPruneableNodes(node, dag, l)
 	pruneableNodes[node] = dag.Nodes[node]
 
@@ -71,10 +71,10 @@ func (p DefaultPruner) PruneBefore(
 
 func (p DefaultPruner) PruneAfter(
 	node string,
-	dag data.DAG,
+	dag models.DAG,
 	l *slog.Logger,
-) (data.DAG, map[string]data.Node) {
-	pruneableNodes := make(map[string]data.Node)
+) (models.DAG, map[string]models.Node) {
+	pruneableNodes := make(map[string]models.Node)
 	pruneableNodes[node] = dag.Nodes[node]
 
 	for descendantName, descendant := range dag.Descendants(node) {

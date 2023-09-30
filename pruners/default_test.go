@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/mhernan88/dag-bisect/data"
+	"github.com/mhernan88/dag-bisect/models"
 )
 
 // DAG
@@ -29,7 +29,7 @@ import (
 func TestFindUpstreamPruneableNodes(t *testing.T) {
 	l := slog.Default()
 
-	dagPtr, err := data.LoadDAG("../dag.json")
+	dagPtr, err := models.LoadDAG("../dag.json")
 	if err != nil {
 		t.Error(err)
 		return
@@ -61,7 +61,7 @@ func TestFindUpstreamPruneableNodes(t *testing.T) {
 func TestFindUpstreamPruneableNodes2(t *testing.T) {
 	l := slog.Default()
 
-	dagPtr, err := data.LoadDAG("../dag.json")
+	dagPtr, err := models.LoadDAG("../dag.json")
 	if err != nil {
 		t.Error(err)
 		return
@@ -89,7 +89,7 @@ func TestFindUpstreamPruneableNodes2(t *testing.T) {
 func TestPruneAfter(t *testing.T) {
 	l := slog.Default()
 
-	dagPtr, err := data.LoadDAG("../dag.json")
+	dagPtr, err := models.LoadDAG("../dag.json")
 	if err != nil {
 		t.Error(err)
 		return
@@ -122,7 +122,7 @@ func TestPruneAfter(t *testing.T) {
         t.Errorf(
             "prunedNodes after PruneAfter, expected %d, got %d",
             expected, len(prunedNodes))
-        t.Logf("prunedNodes: %v", data.SliceMapKeys(prunedNodes))
+        t.Logf("prunedNodes: %v", models.SliceMapKeys(prunedNodes))
         return
     }
 }
@@ -130,7 +130,7 @@ func TestPruneAfter(t *testing.T) {
 func TestPruneBefore(t *testing.T) {
 	l := slog.Default()
 
-	dagPtr, err := data.LoadDAG("../dag.json")
+	dagPtr, err := models.LoadDAG("../dag.json")
 	if err != nil {
 		t.Error(err)
 		return
@@ -180,7 +180,7 @@ func TestPruneBefore(t *testing.T) {
         t.Errorf(
             "prunedNodes after PruneBefore, expected %d, got %d",
             expected, len(prunedNodes))
-        t.Logf("prunedNodes: %v", data.SliceMapKeys(prunedNodes))
+        t.Logf("prunedNodes: %v", models.SliceMapKeys(prunedNodes))
         return
     }
 }

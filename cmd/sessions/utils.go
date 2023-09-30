@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mhernan88/dag-bisect/cmd"
-	"github.com/mhernan88/dag-bisect/db/models"
+	"github.com/mhernan88/dag-bisect/models"
 )
 
 func (sm SessionManager) cleanup(ID string, sess *models.Session, ui *cmd.UI) error {

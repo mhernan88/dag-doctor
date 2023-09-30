@@ -3,7 +3,7 @@ package sessions
 import (
 	"fmt"
 
-	"github.com/mhernan88/dag-bisect/db/models"
+	"github.com/mhernan88/dag-bisect/models"
 	"github.com/urfave/cli/v2"
 )
 

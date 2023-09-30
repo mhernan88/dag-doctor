@@ -5,7 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/enescakir/emoji"
-	"github.com/mhernan88/dag-bisect/data"
+	"github.com/mhernan88/dag-bisect/models"
 )
 
 func (ui *UI) Terminate() {
@@ -41,7 +41,7 @@ func (ui *UI) CheckDAGIter(l *slog.Logger) (bool, error) {
 
 	l.Debug(
 		"completed pruning nodes",
-		"pruned nodes", data.SliceMapKeys(prunedNodes),
+		"pruned nodes", models.SliceMapKeys(prunedNodes),
 		"ok nodes", len(ui.OKNodes),
 		"err nodes", len(ui.ERRNodes),
 		"remaining nodes", len(ui.DAG.Nodes),

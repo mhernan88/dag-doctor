@@ -5,4 +5,5 @@ func(sm SessionManager) cancelSession(ID string) error{
 	if err != nil {
 		return err
 	}
+	return nil
 }

@@ -3,11 +3,11 @@ package pruners
 import (
 	"log/slog"
 
-	"github.com/mhernan88/dag-bisect/data"
+	"github.com/mhernan88/dag-bisect/models"
 )
 
 type Pruner interface {
-	PruneBefore(node string, dag data.DAG, l *slog.Logger) (data.DAG, map[string]data.Node)
-	PruneAfter(node string, dag data.DAG, l *slog.Logger) (data.DAG, map[string]data.Node)
+	PruneBefore(node string, dag models.DAG, l *slog.Logger) (models.DAG, map[string]models.Node)
+	PruneAfter(node string, dag models.DAG, l *slog.Logger) (models.DAG, map[string]models.Node)
 	GetName() string
 }

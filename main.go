@@ -9,7 +9,7 @@ import (
 	"github.com/mhernan88/dag-bisect/cmd"
 	"github.com/mhernan88/dag-bisect/cmd/sessions"
 	"github.com/mhernan88/dag-bisect/cmd/telemetry"
-	"github.com/mhernan88/dag-bisect/data"
+	"github.com/mhernan88/dag-bisect/models"
 	"github.com/mhernan88/dag-bisect/db"
 	"github.com/mhernan88/dag-bisect/pruners"
 	"github.com/mhernan88/dag-bisect/shared"
@@ -52,7 +52,7 @@ func action(c *cli.Context) error {
 
 
 	l.Debug("loading dag")
-	dag, err := data.LoadDAG(c.String("dag"))
+	dag, err := models.LoadDAG(c.String("dag"))
 	if err != nil {
 		return err
 	}

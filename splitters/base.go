@@ -2,10 +2,10 @@ package splitters
 
 import (
 	"log/slog"
-	"github.com/mhernan88/dag-bisect/data"
+	"github.com/mhernan88/dag-bisect/models"
 )
 
 type Splitter interface {
-	FindCandidate(dag data.DAG, l *slog.Logger) (data.Node, error)
+	FindCandidate(dag models.DAG, l *slog.Logger) (models.Node, error)
 	GetName() string
 }
