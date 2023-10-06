@@ -37,8 +37,8 @@ func main() {
 	defer dbHandle.Close()
 
 	app := &cli.App{
-		Name:   "DAG Bisect",
-		Usage:  "Recursively bisect a DAG to quickly locate data errors",
+		Name:   "dag",
+		Usage:  "Recursively bisect a DAG to quickly locate data faults",
 		Commands: []*cli.Command{
 			&telemetry.OptCmd,
 			&sessions.SessionsCmd,
