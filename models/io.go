@@ -1,4 +1,4 @@
-package data
+package models
 
 import (
 	"encoding/json"
@@ -39,4 +39,31 @@ func LoadDAG(filename string) (*DAG, error) {
 	}
 
 	return dag, nil
+}
+
+func SaveState(filename string, state *State) error {
+	f, err := os.OpenFile(filename, os.O_CREATE | os.O_TRUNC | os.O_WRONLY, 0666)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	encoder := json.NewEncoder(f)
+	return encoder.Encode(state)
+}
+
+func LoadState(filename string) (*State, error) {
+	f, err := os.OpenFile(filename, os.O_RDONLY, 0666)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	var state State
+	decoder := json.NewDecoder(f)
+	err = decoder.Decode(&state)
+	if err != nil {
+		return nil, err
+	}
+	return &state, nil
 }

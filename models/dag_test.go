@@ -1,4 +1,4 @@
-package data
+package models
 
 import (
 	"testing"
@@ -83,42 +83,6 @@ func TestUnlink2(t *testing.T) {
     n := dag.Unlink("create_final_model")
     if n != 2 {
         t.Errorf("TestUnlink n: expected 2, got %d", n)
-    }
-}
-
-func TestReconNodesWithInputsAndOutputs1(t *testing.T) {
-    l := logrus.New()
-    l.SetLevel(logrus.TraceLevel)
-    dag, err := LoadDAG("../dag.json")
-    if err != nil {
-        t.Error(err)
-        return
-    }
-
-    n := dag.ReconcileNodesWithInputsAndOutputs()
-    if n != 0 {
-        t.Errorf("nodesWithInputsAndOuputs n: expected 0, got %d", n)
-    }
-}
-
-func TestReconNodesWithInputsAndOutputs2(t *testing.T) {
-    l := logrus.New()
-    l.SetLevel(logrus.TraceLevel)
-    dag, err := LoadDAG("../dag.json")
-    if err != nil {
-        t.Error(err)
-        return
-    }
-
-    const nodeToDelete = "create_final_model"
-    n := dag.Unlink(nodeToDelete)
-    if n != 2 {
-        t.Errorf("Unlink n: expected 2, got %d", n)
-    }
-
-    n = dag.ReconcileNodesWithInputsAndOutputs()
-    if n != 1 {
-        t.Errorf("nodesWithInputsAndOuputs n: expected 1, got %d", n)
     }
 }
 

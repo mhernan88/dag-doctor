@@ -1,4 +1,4 @@
-package data
+package models
 
 import (
 	"fmt"
@@ -131,26 +131,6 @@ func (d *DAG) Unlink(name string) int {
     return len(unlinkedNodes.ToSlice())
 }
 
-// // Deletes nodes that do not have corresponding node inputs/outputs.
-// func (d *DAG) ReconcileNodesWithInputsAndOutputs() int {
-// 	// Find all nodes in inputs/outputs.
-// 	allNames := d.CompileInputsAndOutputs()
-//
-// 	// Find nodes not in inputs/outputs.
-//     nodesToDelete := mapset.NewSet[string]()
-// 	for nodeName := range d.Nodes {
-// 		if !allNames.Contains(nodeName) {
-//             nodesToDelete.Add(nodeName)
-// 		}
-// 	}
-//
-// 	// Delete nodes not in inputs/outputs.
-// 	for _, nodeToDelete := range nodesToDelete.ToSlice() {
-// 		delete(d.Nodes, nodeToDelete)
-// 	}
-//     return len(nodesToDelete.ToSlice())
-// }
-
 // Deletes node inputs/outputs that do not have a corresponding node.
 func (d *DAG) ReconcileInputsAndOutputsWithNodes() int {
 	// Find all unique node names.
@@ -190,16 +170,6 @@ func (d *DAG) ReconcileInputsAndOutputsWithNodes() int {
 		}
 	}
     return len(deletedInputsAndOutputs.ToSlice())
-}
-
-// Returns whether dag is reconciled, labels (inputs/outputs) not in nodes, and nodes not in labels (inputs/outputs).
-func (d *DAG) IsReconciled() (bool, []string, []string) {
-	labels := d.CompileInputsAndOutputs()
-	names := mapset.NewSetFromMapKeys[string](d.Nodes)
-
-	labelsAndNotNodes := labels.Difference(names).ToSlice()
-	NodesAndNotLabels := names.Difference(labels).ToSlice()
-	return len(labels.SymmetricDifference(names).ToSlice()) == 0, labelsAndNotNodes, NodesAndNotLabels
 }
 
 func (d *DAG) Slice() ([]string, []Node) {
@@ -282,12 +252,4 @@ func (d *DAG) IsAcyclic() bool {
 	}
 
 	return true
-}
-
-type Node struct {
-	Name    string   `json:"name"`
-	Inputs  []string `json:"inputs"`
-	Outputs []string `json:"outputs"`
-	Next    []string `json:"next"` // []nodeName
-	Prev    []string `json:"prev"` // []nodeName
 }

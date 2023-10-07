@@ -1,39 +1,39 @@
-package cmd
+package interactive
 
 import (
+	"log/slog"
 	"strings"
 	"testing"
 
-	"github.com/mhernan88/dag-bisect/data"
-	"github.com/mhernan88/dag-bisect/pruners"
-	"github.com/mhernan88/dag-bisect/splitters"
-	"github.com/sirupsen/logrus"
+	"github.com/mhernan88/dag-bisect/models"
+	"github.com/mhernan88/dag-bisect/resolver/pruners"
 )
 
 func TestUI__PruneNodes(t *testing.T) {
-	l := logrus.New()
-	l.SetLevel(logrus.TraceLevel)
+	l := slog.Default()
 
-	dagPtr, err := data.LoadDAG("../dag.json")
+	dagPtr, err := models.LoadDAG("../dag.json")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	dag := *dagPtr
 
-	p := pruners.NewDefaultPruner(99, l)
-    s := splitters.NewDefaultSplitter(99, l)
+	p := pruners.NewDefaultPruner()
 
-    ui := NewUI(dag, s, p, 99, l)
-    prunedNodes := ui.pruneNodes(
+    state := models.NewState(dag)
+    prunedNodes := pruneNodes(
+		state,
+		p,
         dag.Nodes["preprocess_companies_and_employees"],
         false,
+		l,
     )
 
     const expected = 5
     if len(prunedNodes) != expected {
         t.Errorf("prunedNodes; want=%d, got=%d", expected, len(prunedNodes))
-        prunedNodesString := data.SliceMapKeys(prunedNodes)
+        prunedNodesString := models.SliceMapKeys(prunedNodes)
         prunedNodesFormattedString := strings.Join(prunedNodesString, "\n- ")
         t.Logf("Nodes:\n- %v", prunedNodesFormattedString)
         return
